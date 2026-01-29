@@ -25,6 +25,7 @@ namespace S10273989D_PRG2Assignment
         {
             EmailAddress = emailAddress;
             CustomerName = customerName;
+            Orders = new List<Order>();
         }
 
         public Customer()
