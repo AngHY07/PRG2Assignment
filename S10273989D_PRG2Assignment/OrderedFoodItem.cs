@@ -19,20 +19,27 @@ namespace S10273989D_PRG2Assignment
         public double SubTotal { get; set; }
 
 
-        public OrderedFoodItem(string itemName,string itemDesc, double itemPrice ,int qtyordered, double subtotal, FoodItem foodItem)
+        public OrderedFoodItem(string itemName,string itemDesc, double itemPrice ,int qtyordered, double subtotal): base(itemName,itemDesc,itemPrice)
         {
             this.QtyOrdered = qtyordered;
             this.SubTotal = subtotal;
-            FoodItem = foodItem;
+            
+        }
+
+        public OrderedFoodItem(string itemName, string itemDesc, double itemPrice, string customize, int qtyordered, double subtotal) : base(itemName, itemDesc, itemPrice,customize)
+        {
+            this.QtyOrdered = qtyordered;
+            this.SubTotal = subtotal;
+
         }
 
         public double CalculateSubtotal()
         {
-            double subTotal = 0;
+            
 
-            subTotal += FoodItem.itemPrice * QtyOrdered;
+            SubTotal += itemPrice * QtyOrdered;
 
-            return subTotal;
+            return SubTotal;
         }
     }
 }

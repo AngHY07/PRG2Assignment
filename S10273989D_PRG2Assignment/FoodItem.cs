@@ -45,5 +45,12 @@ namespace S10273989D_PRG2Assignment
                     ", Price: " + ItemPrice +
                     ", Customise: " + Customise;
         }
+
+        public FoodItem(string itemName, string itemDesc, double itemPrice)
+        {
+            this.itemName = itemName;
+            this.itemDesc = itemDesc;
+            this.itemPrice = itemPrice;
+        }
     }
 }

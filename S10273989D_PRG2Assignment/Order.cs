@@ -82,7 +82,7 @@ namespace S10273989D_PRG2Assignment
         {
             foreach(OrderedFoodItem item in OrderedFoodItem)
             {
-                Console.WriteLine($"{item.FoodItem.itemName} - {item.QtyOrdered}");
+                Console.WriteLine($"{item.itemName} - {item.QtyOrdered}");
             }
         }
 

@@ -43,7 +43,7 @@ namespace S10273989D_PRG2Assignment
         {
             FoodItems.Remove(item);
         }
-
+        
         public void DisplayFoodItems()
         {
             Console.WriteLine($"Menu: {MenuName} (ID: {MenuID})");

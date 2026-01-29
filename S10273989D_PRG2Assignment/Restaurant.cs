@@ -33,7 +33,10 @@ namespace S10273989D_PRG2Assignment
             this.RestaurantId = restaurantId;
             this.RestaurantName = restaurantName;
             this.RestaurantEmail = restaurantEmail;
-            
+            Menu = new List<Menu>();
+            Order = new List<Order>();
+            SpecialOffer = new List<SpecialOffer>();
+
             Order = new List<Order>();
         }   
 

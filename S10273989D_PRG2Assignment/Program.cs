@@ -3,16 +3,22 @@
 
 using S10273989D_PRG2Assignment;
 
-List<Restaurant> restaurantsObj = new List<Restaurant>();
-List <Customer> customerObj = new List<Customer>();
+Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
+
+Dictionary<string, FoodItem> foodItemObj = new Dictionary<string, FoodItem>();
+
+List<Customer> customerObj = new List<Customer>();
+
 List<Order> orderObj = new List<Order>();
 
+
+Dictionary<string, Menu> menuObj = new Dictionary<string, Menu>();
 
 void RestaurantInit()
 {
     using (StreamReader sr = new StreamReader("restaurants.csv"))
     {
-
+        int counter = 0;
         string title = sr.ReadLine();
 
         while (true)
@@ -27,66 +33,50 @@ void RestaurantInit()
 
             string[] restaurantInfo = line.Split(',');
 
-            
 
-
+            restaurantsObj[restaurantInfo[0]] = new Restaurant(restaurantInfo[0], restaurantInfo[1], restaurantInfo[2]);
+            restaurantsObj[restaurantInfo[0]].Menu.Add(new Menu(counter.ToString(), "Main Menu"));
+            counter += 1;
         }
+
+        Console.WriteLine($"{counter} restaurants loaded!");
+    }
+}
+
+int OrderInit()
+{
+    using (StreamReader sr = new StreamReader("fooditems.csv"))
+    {
+
+        int counter = 0;
+        string title = sr.ReadLine();
+        while (true)
+        {
+            string line = sr.ReadLine();
+            if (line == null)
+            {
+                break;
+            }
+
+            }
+        }
+        return orderCount;
     }
 }
 
 
 
+            counter += 1;
+        }
+
+        Console.WriteLine($"{counter} Food Items loaded!");
+    }
+}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+RestaurantInit();
+FoodItemInit();
+Console.ReadLine();
 
 void CustomerInit()
 {
@@ -181,116 +171,3 @@ void ListAllRestaurantsAndMenuItems()
         res.DisplayMenu();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
