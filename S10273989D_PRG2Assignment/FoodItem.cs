@@ -32,10 +32,7 @@ namespace S10273989D_PRG2Assignment
 
         public FoodItem()
         {
-            this.ItemName = itemName;
-            this.ItemDesc = itemDesc;
-            this.ItemPrice = itemPrice;
-            this.Customise = customise;
+
         }
 
         public override string ToString()
@@ -48,9 +45,9 @@ namespace S10273989D_PRG2Assignment
 
         public FoodItem(string itemName, string itemDesc, double itemPrice)
         {
-            this.itemName = itemName;
-            this.itemDesc = itemDesc;
-            this.itemPrice = itemPrice;
+            this.ItemName = itemName;
+            this.ItemDesc = itemDesc;
+            this.ItemPrice = itemPrice;
         }
     }
 }
