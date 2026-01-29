@@ -62,8 +62,13 @@ Dictionary<string, Menu> menuObj = new Dictionary<string, Menu>();
 
 
 
-//            counter += 1;
-//        }
+            foodItemObj[foodItemInfo[1]] = new FoodItem(foodItemInfo[1], foodItemInfo[2], double.Parse(foodItemInfo[3]));
+
+            restaurantsObj[foodItemInfo[0]].Menu[0].AddFoodItem(foodItemObj[foodItemInfo[1]]);
+
+
+            counter += 1;
+        }
 
 //        Console.WriteLine($"{counter} Food Items loaded!");
 //    }
@@ -116,6 +121,7 @@ void OrderInit()
                 string[] orderInfo = line.Split(',');
                 Order ord = new Order(orderInfo[0], orderInfo[1], orderInfo[2], orderInfo[3], orderInfo[4], orderInfo[5], orderInfo[6], orderInfo[7], orderInfo[8], orderInfo[9]);
                 orderObj.Add(ord);
+
                 foreach (Order in orderObj)
                 {
                     foreach (Customer cust in customerObj)
@@ -151,11 +157,6 @@ void MainMenu()
     Console.WriteLine("6. Delete an existing order");
     Console.WriteLine("0. Exit");
     Console.Write("Enter your choice: ");
-    int choice = Console.ReadLine();
-    if (choice == 0)
-    {
-        ListAllRestaurantsAndMenuItems();
-    }
 }
 
 void ListAllRestaurantsAndMenuItems()
@@ -165,6 +166,3 @@ void ListAllRestaurantsAndMenuItems()
         res.DisplayMenu();
     }
 }
-
-CustomerInit()
-OrderInit()

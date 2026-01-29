@@ -32,16 +32,17 @@ namespace S10273989D_PRG2Assignment
 
         public Customer Customer { get; set; }
 
+        public Restaurant Restaurant { get; set; }
 
         public List<OrderedFoodItem> OrderedFoodItem { get; set; }
 
         public SpecialOffer SpecialOffer { get; set; }
 
-        public Order(Customer customer, SpecialOffer specialOffer, int orderid, DateTime orderDateTime, double orderstatus, DateTime deliverydatetime, string deliveryaddress, string orderpaymentmethod, bool orderpaid)
+        public Order(Customer customer, Restaurant restraurant, SpecialOffer specialOffer, int orderid, DateTime orderDateTime, double orderstatus, DateTime deliverydatetime, string deliveryaddress, string orderpaymentmethod, bool orderpaid)
         {
             
             this.Customer = customer;
-            
+            this.Restaurant = restraurant;
             this.SpecialOffer = specialOffer;
             this.OrderID = orderid;
             this.OrderDateTime = orderDateTime;
@@ -82,7 +83,7 @@ namespace S10273989D_PRG2Assignment
         {
             foreach(OrderedFoodItem item in OrderedFoodItem)
             {
-                Console.WriteLine($"{item.itemName} - {item.QtyOrdered}");
+                Console.WriteLine($"{item.ItemName} - {item.QtyOrdered}");
             }
         }
 

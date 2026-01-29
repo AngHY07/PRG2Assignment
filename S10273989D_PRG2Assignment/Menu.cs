@@ -29,8 +29,6 @@ namespace S10273989D_PRG2Assignment
 
         public Menu() 
         {
-            MenuID = menuID;
-            MenuName = menuName;
             FoodItems = new List<FoodItem>();
         }
 

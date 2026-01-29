@@ -37,7 +37,7 @@ namespace S10273989D_PRG2Assignment
         {
             
 
-            SubTotal += itemPrice * QtyOrdered;
+            SubTotal += ItemPrice * QtyOrdered;
 
             return SubTotal;
         }

@@ -30,13 +30,12 @@ namespace S10273989D_PRG2Assignment
 
         public Customer()
         {
-            EmailAddress = emailAddress;
-            CustomerName = customerName;
+
         }
 
-        public void AddOrder(Order)
+        public void AddOrder(Order or)
         {
-            Orders.Add(Order);
+            Orders.Add(or);
         }
 
         public void DisplayAllOrders()
