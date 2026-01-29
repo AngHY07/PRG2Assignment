@@ -3,14 +3,14 @@
 
 using S10273989D_PRG2Assignment;
 
-Dictionary<string,Restaurant> restaurantsObj = new Dictionary<string,Restaurant>();
+Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
 
-Dictionary<string,FoodItem> foodItemObj = new Dictionary<string,FoodItem>();
-
-
+Dictionary<string, FoodItem> foodItemObj = new Dictionary<string, FoodItem>();
 
 
-Dictionary<string,Menu> menuObj = new Dictionary<string, Menu>();
+
+
+Dictionary<string, Menu> menuObj = new Dictionary<string, Menu>();
 
 void RestaurantInit()
 {
@@ -32,7 +32,7 @@ void RestaurantInit()
             string[] restaurantInfo = line.Split(',');
 
 
-            restaurantsObj[restaurantInfo[0]]  = new Restaurant(restaurantInfo[0], restaurantInfo[1], restaurantInfo[2]);
+            restaurantsObj[restaurantInfo[0]] = new Restaurant(restaurantInfo[0], restaurantInfo[1], restaurantInfo[2]);
             restaurantsObj[restaurantInfo[0]].Menu.Add(new Menu(counter.ToString(), "Main Menu"));
             counter += 1;
         }

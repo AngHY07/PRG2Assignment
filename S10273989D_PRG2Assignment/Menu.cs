@@ -27,6 +27,13 @@ namespace S10273989D_PRG2Assignment
             FoodItems = new List<FoodItem>();
         }
 
+        public Menu() 
+        {
+            MenuID = menuID;
+            MenuName = menuName;
+            FoodItems = new List<FoodItem>();
+        }
+
         public void AddFoodItem(FoodItem item)
         {
             FoodItems.Add(item);
@@ -42,7 +49,7 @@ namespace S10273989D_PRG2Assignment
             Console.WriteLine($"Menu: {MenuName} (ID: {MenuID})");
             foreach (var item in FoodItems)
             {
-                Console.WriteLine($"- {item.itemName}: {item.itemDesc} - ${item.itemPrice}");
+                Console.WriteLine($"- {item.ItemName}: {item.ItemDesc} - {item.ItemPrice}");
             }
         }
 
