@@ -159,10 +159,10 @@ void MainMenu()
     Console.Write("Enter your choice: ");
 }
 
-void ListAllRestaurantsAndMenuItems()
-{
-    foreach (Restaurant res in restaurantsObj)
-    {
-        res.DisplayMenu();
-    }
-}
+//void ListAllRestaurantsAndMenuItems()
+//{
+//    foreach (Restaurant res in restaurantsObj)
+//    {
+//        res.DisplayMenu();
+//    }
+//
