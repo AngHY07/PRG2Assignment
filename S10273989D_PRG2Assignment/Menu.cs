@@ -49,7 +49,7 @@ namespace S10273989D_PRG2Assignment
             Console.WriteLine($"Menu: {MenuName} (ID: {MenuID})");
             foreach (var item in FoodItems)
             {
-                Console.WriteLine($"- {item.FoodName}: {item.ItemDesc} - {item.ItemPrice}");
+                Console.WriteLine($"- {item.ItemName}: {item.ItemDesc} - {item.ItemPrice}");
             }
         }
 

@@ -33,7 +33,62 @@ void RestaurantInit()
         }
     }
 }
-int CustomerInit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void CustomerInit()
 {
     int customerCount = 0;
     using (StreamReader sr = new StreamReader("customers.csv"))
@@ -54,11 +109,11 @@ int CustomerInit()
                 customerObj.Add(cust);
             }
         }
-        return customerCount;
+        Console.WriteLine(customerCount + " customers loaded!");
     }
 }
 
-int OrderInit()
+void OrderInit()
 {
     int orderCount = 0;
     using (StreamReader sr = new StreamReader("orders.csv"))
@@ -97,11 +152,35 @@ int OrderInit()
 
             }
         }
-        return orderCount;
+        Console.WriteLine(orderCount + " orders loaded!");
     }
 }
 
+void MainMenu()
+{
+    Console.WriteLine("===== Gruberoo Food Delivery System =====");
+    Console.WriteLine("1. List all restaurants and menu items");
+    Console.WriteLine("2. List all orders");
+    Console.WriteLine("3. Create a new order");
+    Console.WriteLine("4.Process an order");
+    Console.WriteLine("5. Modify an existing order");
+    Console.WriteLine("6. Delete an existing order");
+    Console.WriteLine("0. Exit");
+    Console.Write("Enter your choice: ");
+    int choice = Console.ReadLine();
+    if (choice == 0)
+    {
+        ListAllRestaurantsAndMenuItems();
+    }
+}
 
+void ListAllRestaurantsAndMenuItems()
+{
+    foreach (Restaurant res in restaurantsObj)
+    {
+        res.DisplayMenu();
+    }
+}
 
 
 
