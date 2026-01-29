@@ -11,16 +11,15 @@ using System.Threading.Tasks;
 
 namespace S10273989D_PRG2Assignment
 {
-    internal class OrderedFoodItem
+    internal class OrderedFoodItem: FoodItem
     {
 
         public int QtyOrdered { get; set; }
 
         public double SubTotal { get; set; }
 
-        public FoodItem FoodItem { get; set; }
 
-        public OrderedFoodItem(int qtyordered, double subtotal, FoodItem foodItem)
+        public OrderedFoodItem(string itemName,string itemDesc, double itemPrice ,int qtyordered, double subtotal, FoodItem foodItem)
         {
             this.QtyOrdered = qtyordered;
             this.SubTotal = subtotal;
