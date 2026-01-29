@@ -1,4 +1,10 @@
-﻿using System;
+﻿//==========================================================
+// Student Number : S10274355B
+// Student Name : Choo Yi Zehn
+// Partner Name : Ang Hao Yi
+//==========================================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +20,35 @@ namespace S10273989D_PRG2Assignment
 
         public List<FoodItem> FoodItems { get; set; }   
 
+        public Menu(string menuID, string menuName)
+        {
+            MenuID = menuID;
+            MenuName = menuName;
+            FoodItems = new List<FoodItem>();
+        }
 
+        public void AddFoodItem(FoodItem item)
+        {
+            FoodItems.Add(item);
+        }
 
+        public void RemoveFoodItem(FoodItem item)
+        {
+            FoodItems.Remove(item);
+        }
+
+        public void DisplayFoodItems()
+        {
+            Console.WriteLine($"Menu: {MenuName} (ID: {MenuID})");
+            foreach (var item in FoodItems)
+            {
+                Console.WriteLine($"- {item.FoodName} (ID: {item.FoodID}, Price: {item.Price:C})");
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"MenuID: {MenuID}, MenuName: {MenuName}, FoodItems Count: {FoodItems.Count}";
+        }
     }
 }
