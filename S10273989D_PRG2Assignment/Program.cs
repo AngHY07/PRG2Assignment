@@ -7,39 +7,39 @@ Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restauran
 
 Dictionary<string, FoodItem> foodItemObj = new Dictionary<string, FoodItem>();
 
-List<Customer> customerObj = new List<Customer>();
+Dictionary<string, Customer> customerObj = new Dictionary<string, Customer>();
 
-List<Order> orderObj = new List<Order>();
+Dictionary<int, Order> orderObj = new Dictionary<int, Order>();
 
 Dictionary<string, Menu> menuObj = new Dictionary<string, Menu>();
 
 void RestaurantInit()
 {
-using (StreamReader sr = new StreamReader("restaurants.csv"))
-{
-int counter = 0;
-string title = sr.ReadLine();
+    using (StreamReader sr = new StreamReader("restaurants.csv"))
+    {
+        int counter = 0;
+        string title = sr.ReadLine();
 
-while (true)
-{
-string line = sr.ReadLine();
+        while (true)
+        {
+            string line = sr.ReadLine();
 
-if (line == null)
-{
-break;
-}
-
-
-string[] restaurantInfo = line.Split(',');
+            if (line == null)
+            {
+                break;
+            }
 
 
-restaurantsObj[restaurantInfo[0]] = new Restaurant(restaurantInfo[0], restaurantInfo[1], restaurantInfo[2]);
-restaurantsObj[restaurantInfo[0]].Menu.Add(new Menu(counter.ToString(), "Main Menu"));
-counter += 1;
-}
+            string[] restaurantInfo = line.Split(',');
 
-Console.WriteLine($"{counter} restaurants loaded!");
-}
+
+            restaurantsObj[restaurantInfo[0]] = new Restaurant(restaurantInfo[0], restaurantInfo[1], restaurantInfo[2]);
+            restaurantsObj[restaurantInfo[0]].Menu.Add(new Menu(counter.ToString(), "Main Menu"));
+            counter += 1;
+        }
+
+        Console.WriteLine($"{counter} restaurants loaded!");
+    }
 }
 
 
@@ -70,7 +70,7 @@ void FoodItemInit()
             counter += 1;
         }
 
-        Console.WriteLine($"{counter} Food Items loaded!");
+        Console.WriteLine($"{counter} food items loaded!");
     }
 }
 
@@ -90,13 +90,14 @@ void CustomerInit()
             {
                 break;
             }
-            else
-            {
-                customerCount++;
-                string[] customerInfo = line.Split(',');
-                Customer cust = new Customer(customerInfo[0], customerInfo[1]);
-                customerObj.Add(cust);
-            }
+
+            string[] customerInfo = line.Split(',');
+            string name = customerInfo[0].Trim();
+            string email = customerInfo[1].Trim();
+
+            customerObj[email] = new Customer(name, email);
+
+            customerCount++;
         }
         Console.WriteLine(customerCount + " customers loaded!");
     }
@@ -105,59 +106,84 @@ void CustomerInit()
 void OrderInit()
 {
     int orderCount = 0;
+
     using (StreamReader sr = new StreamReader("orders.csv"))
     {
-        string title = sr.ReadLine();
+        string title = sr.ReadLine(); // skip header
+
         while (true)
         {
             string line = sr.ReadLine();
             if (line == null)
-            {
                 break;
-            }
-            else
+
+            string[] orderInfo = line.Split(',');
+
+            int orderId = int.Parse(orderInfo[0]);
+            string customerEmail = orderInfo[1];
+            string restaurantId = orderInfo[2];
+
+            DateTime deliveryDate = DateTime.Parse(orderInfo[3]);
+            TimeSpan deliveryTime = TimeSpan.Parse(orderInfo[4]);
+            string deliveryAddress = orderInfo[5];
+
+            DateTime createdDateTime = DateTime.Parse(orderInfo[6]);
+            double totalAmount = double.Parse(orderInfo[7]);
+            string status = orderInfo[8];
+            string items = orderInfo[9]; // not used yet
+
+            if (!customerObj.TryGetValue(customerEmail, out Customer customer))
             {
-                orderCount++;
-                string[] orderInfo = line.Split(',');
-                Order ord = new Order(orderInfo[0], orderInfo[1], orderInfo[2], orderInfo[3], orderInfo[4], orderInfo[5], orderInfo[6], orderInfo[7], orderInfo[8], orderInfo[9]);
-                orderObj.Add(ord);
-
-                foreach (Order in orderObj)
-                {
-                    foreach (Customer cust in customerObj)
-                    {
-                        if (ord.CustomerEmail == cust.EmailAddress)
-                        {
-                            cust.AddOrder(ord);
-                        }
-                    }
-                    foreach (Restaurant res in restaurantsObj)
-                    {
-                        if (ord.RestaurantID == res.RestaurantId)
-                        {
-                            res.Order.Add(ord);
-                        }
-                    }
-                }
-
+                Console.WriteLine($"Order {orderId} skipped — customer not found: {customerEmail}");
+                continue;
             }
+
+            if (!restaurantsObj.TryGetValue(restaurantId, out Restaurant restaurant))
+            {
+                Console.WriteLine($"Order {orderId} skipped — restaurant not found: {restaurantId}");
+                continue;
+            }
+            SpecialOffer specialOffer = null;
+
+            Order order = new Order(
+                customer,
+                restaurant,
+                specialOffer,
+                orderId,
+                createdDateTime,
+                0, // status mapping later
+                deliveryDate.Add(deliveryTime),
+                deliveryAddress,
+                "Unknown",
+                true
+            );
+
+            orderObj[orderId] = order;
+            orderCount++;
         }
-        Console.WriteLine(orderCount + " orders loaded!");
     }
+
+    Console.WriteLine($"{orderCount} orders loaded!");
 }
 
-void MainMenu()
-{
-    Console.WriteLine("===== Gruberoo Food Delivery System =====");
-    Console.WriteLine("1. List all restaurants and menu items");
-    Console.WriteLine("2. List all orders");
-    Console.WriteLine("3. Create a new order");
-    Console.WriteLine("4.Process an order");
-    Console.WriteLine("5. Modify an existing order");
-    Console.WriteLine("6. Delete an existing order");
-    Console.WriteLine("0. Exit");
-    Console.Write("Enter your choice: ");
-}
+
+RestaurantInit();
+CustomerInit();
+FoodItemInit();
+OrderInit();
+
+//void MainMenu()
+//{
+//    Console.WriteLine("===== Gruberoo Food Delivery System =====");
+//    Console.WriteLine("1. List all restaurants and menu items");
+//    Console.WriteLine("2. List all orders");
+//    Console.WriteLine("3. Create a new order");
+//    Console.WriteLine("4.Process an order");
+//    Console.WriteLine("5. Modify an existing order");
+//    Console.WriteLine("6. Delete an existing order");
+//    Console.WriteLine("0. Exit");
+//    Console.Write("Enter your choice: ");}
+
 
 //void ListAllRestaurantsAndMenuItems()
 //{
