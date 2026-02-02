@@ -105,6 +105,9 @@ void CustomerInit()
 
 void OrderInit()
 {
+    List<OrderedFoodItem> orderedFoodItems = new List<OrderedFoodItem>();
+
+    
     int orderCount = 0;
 
     using (StreamReader sr = new StreamReader("orders.csv"))
@@ -113,12 +116,15 @@ void OrderInit()
 
         while (true)
         {
+
+            orderedFoodItems.Clear();
+
             string line = sr.ReadLine();
             if (line == null)
                 break;
 
             string[] orderInfo = line.Split(',');
-
+            string[] foodInfo = line.Split("\"");
             int orderId = int.Parse(orderInfo[0]);
             string customerEmail = orderInfo[1];
             string restaurantId = orderInfo[2];
@@ -130,7 +136,22 @@ void OrderInit()
             DateTime createdDateTime = DateTime.Parse(orderInfo[6]);
             double totalAmount = double.Parse(orderInfo[7]);
             string status = orderInfo[8];
-            string items = orderInfo[9]; // not used yet
+            string itemsline = foodInfo[1]; // not used yet
+
+            string[] items = itemsline.Split("|");
+
+
+            foreach (string item in items)
+            {
+                string[] individualItem = item.Split(",");
+                string individualItemName = individualItem[0];
+                int qtyordered = int.Parse(individualItem[1]);
+                orderedFoodItems.Add(new OrderedFoodItem(individualItem[0],
+                    foodItemObj[individualItemName].ItemDesc,
+                    foodItemObj[individualItemName].ItemPrice,
+                    qtyordered));
+
+            }
 
             if (!customerObj.TryGetValue(customerEmail, out Customer customer))
             {
@@ -151,13 +172,15 @@ void OrderInit()
                 specialOffer,
                 orderId,
                 createdDateTime,
-                0, // status mapping later
+                status, 
                 deliveryDate.Add(deliveryTime),
-                deliveryAddress,
-                "Unknown",
-                true
+                totalAmount,
+                deliveryAddress
             );
-
+            foreach(OrderedFoodItem ofi in orderedFoodItems)
+            {
+                order.AddOrderedFoodItem(ofi);
+            }
             orderObj[orderId] = order;
             orderCount++;
         }
@@ -166,11 +189,29 @@ void OrderInit()
     Console.WriteLine($"{orderCount} orders loaded!");
 }
 
+void ListAllOrder()
+{
+    Console.WriteLine("All Orders");
+    Console.WriteLine("==========");
+    Console.WriteLine($"{"Order ID",-9}  {"Customer",-13}  {"Restaurant",-15}  {"Delivery Date/Time",-18}  {"Amount",-6}  {"Status",-9}");
+    Console.WriteLine($"{"---------",-9}  {"----------",-13}  {"-------------",-15}  {"------------------",-18}  {"------",-6}  {"---------",-9}");
+    
+    foreach(int orderid in orderObj.Keys)
+    {
+
+        Order order = orderObj[orderid];
+        Console.WriteLine($"{order.OrderID,-9}  {order.Customer.CustomerName,-13}  {order.Restaurant.RestaurantName,-15}  {order.DeliveryDateTime.ToString("dd/MM/yyyy H:mm"),-18}  {$"${order.OrderTotal.ToString("F2")}",-6}  {order.OrderStatus,-9}");
+    }
+
+}
 
 RestaurantInit();
 CustomerInit();
 FoodItemInit();
 OrderInit();
+ListAllOrder();
+
+Console.ReadLine();
 
 //void MainMenu()
 //{

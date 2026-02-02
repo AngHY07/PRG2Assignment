@@ -20,7 +20,7 @@ namespace S10273989D_PRG2Assignment
 
         public double OrderTotal { get; set; }
 
-        public double OrderStatus { get; set; }
+        public string OrderStatus { get; set; }
 
         public DateTime DeliveryDateTime { get; set; }
 
@@ -38,7 +38,7 @@ namespace S10273989D_PRG2Assignment
 
         public SpecialOffer SpecialOffer { get; set; }
 
-        public Order(Customer customer, Restaurant restraurant, SpecialOffer specialOffer, int orderid, DateTime orderDateTime, double orderstatus, DateTime deliverydatetime, string deliveryaddress, string orderpaymentmethod, bool orderpaid)
+        public Order(Customer customer, Restaurant restraurant, SpecialOffer specialOffer, int orderid, DateTime orderDateTime, string orderstatus, DateTime deliverydatetime, double totalamount,string deliveryaddress)
         {
             
             this.Customer = customer;
@@ -49,8 +49,7 @@ namespace S10273989D_PRG2Assignment
             this.OrderStatus = orderstatus;
             this.DeliveryDateTime = deliverydatetime;
             this.DeliveryAddress = deliveryaddress;
-            this.OrderPaymentMethod = orderpaymentmethod;
-            this.OrderPaid = orderpaid;
+            this.OrderTotal = totalamount;
             OrderedFoodItem = new List<OrderedFoodItem>();
 
         }
