@@ -63,7 +63,7 @@ namespace S10273989D_PRG2Assignment
             {
                 foreach(FoodItem fi in m.FoodItems)
                 {
-                    Console.WriteLine($"  - {fi.ItemName}: {fi.ItemDesc} - ${fi.ItemPrice}");
+                    Console.WriteLine($"   - {fi.ItemName}: {fi.ItemDesc} - ${fi.ItemPrice.ToString("0.00")}");
                 }
             }
         }
