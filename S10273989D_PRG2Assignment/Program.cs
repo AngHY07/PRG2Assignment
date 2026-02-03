@@ -1,5 +1,15 @@
 ﻿
+//==========================================================
+// Student Number : S10273989D
+// Student Name : Ang Hao Yi
+// Partner Name : Choo Yi Zehn
+//==========================================================
 
+//==========================================================
+// Student Number : S10274355B
+// Student Name : Choo Yi Zehn
+// Partner Name : Ang Hao Yi
+//==========================================================
 
 using Microsoft.VisualBasic;
 using S10273989D_PRG2Assignment;
@@ -178,7 +188,9 @@ void OrderInit()
                 totalAmount,
                 deliveryAddress
             );
-            foreach(OrderedFoodItem ofi in orderedFoodItems)
+
+            restaurantsObj[restaurant.RestaurantId].Order.Enqueue(order);
+            foreach (OrderedFoodItem ofi in orderedFoodItems)
             {
                 order.AddOrderedFoodItem(ofi);
             }
@@ -194,14 +206,14 @@ void ListAllOrder()
 {
     Console.WriteLine("All Orders");
     Console.WriteLine("==========");
-    Console.WriteLine($"{"Order ID",-9}  {"Customer",-13}  {"Restaurant",-15}  {"Delivery Date/Time",-18}  {"Amount",-6}  {"Status",-9}");
-    Console.WriteLine($"{"---------",-9}  {"----------",-13}  {"-------------",-15}  {"------------------",-18}  {"------",-6}  {"---------",-9}");
+    Console.WriteLine($"{"Order ID",-9}  {"Customer",-13}  {"Restaurant",-15}  {"Delivery Date/Time",-18}  {"Amount",-7}  {"Status",-9}");
+    Console.WriteLine($"{"---------",-9}  {"----------",-13}  {"-------------",-15}  {"------------------",-18}  {"------",-7}  {"---------",-9}");
     
     foreach(int orderid in orderObj.Keys)
     {
 
         Order order = orderObj[orderid];
-        Console.WriteLine($"{order.OrderID,-9}  {order.Customer.CustomerName,-13}  {order.Restaurant.RestaurantName,-15}  {order.DeliveryDateTime.ToString("dd/MM/yyyy H:mm"),-18}  {$"${order.OrderTotal.ToString("F2")}",-6}  {order.OrderStatus,-9}");
+        Console.WriteLine($"{order.OrderID,-9}  {order.Customer.CustomerName,-13}  {order.Restaurant.RestaurantName,-15}  {order.DeliveryDateTime.ToString("dd/MM/yyyy H:mm"),-18}  {$"${order.OrderTotal.ToString("F2")}",-7}  {order.OrderStatus,-9}");
     }
 }
 
@@ -291,7 +303,7 @@ void CreateNewOrder()
     newOrder.OrderPaid = true;
 
     orderObj.Add(newOrder.OrderID, newOrder);
-    res.Order.Add(newOrder);
+    res.Order.Enqueue(newOrder);
     Customer cust = customerObj[cEmail];
     cust.Orders.Add(newOrder);
 
@@ -307,32 +319,50 @@ void CreateNewOrder()
     Console.WriteLine($"Order {newOrder.OrderID} created successfully! Status: Pending");
 }
 
+void MainMenu()
+{
+    Console.WriteLine("===== Gruberoo Food Delivery System =====");
+    Console.WriteLine("1. List all restaurants and menu items");
+    Console.WriteLine("2. List all orders");
+    Console.WriteLine("3. Create a new order");
+    Console.WriteLine("4. Process an order");
+    Console.WriteLine("5. Modify an existing order");
+    Console.WriteLine("6. Delete an existing order");
+    Console.WriteLine("0. Exit");
+    Console.Write("Enter your choice: ");
+}
+
 RestaurantInit();
 CustomerInit();
 FoodItemInit();
 OrderInit();
-ListAllRestaurantsAndMenuItems();
-CreateNewOrder();
-
-Console.ReadLine();
-
-//void MainMenu()
-//{
-//    Console.WriteLine("===== Gruberoo Food Delivery System =====");
-//    Console.WriteLine("1. List all restaurants and menu items");
-//    Console.WriteLine("2. List all orders");
-//    Console.WriteLine("3. Create a new order");
-//    Console.WriteLine("4.Process an order");
-//    Console.WriteLine("5. Modify an existing order");
-//    Console.WriteLine("6. Delete an existing order");
-//    Console.WriteLine("0. Exit");
-//    Console.Write("Enter your choice: ");}
 
 
-//void ListAllRestaurantsAndMenuItems()
-//{
-//    foreach (Restaurant res in restaurantsObj)
-//    {
-//        res.DisplayMenu();
-//    }
-//
+while(true)
+{
+    MainMenu();
+    int inputChoice = int.Parse(Console.ReadLine());
+
+    if (inputChoice == 0)
+    {
+        break;
+    } 
+    else if (inputChoice == 1)
+    {
+        ListAllRestaurantsAndMenuItems();
+    }
+    else if (inputChoice == 2)
+    {
+        ListAllOrder();
+    }
+    else if (inputChoice == 3)
+    {
+        CreateNewOrder();
+    }
+
+
+}    
+
+
+
+

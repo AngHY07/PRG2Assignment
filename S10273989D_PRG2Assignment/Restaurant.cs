@@ -24,7 +24,7 @@ namespace S10273989D_PRG2Assignment
 
         public List<Menu> Menu { get; set; }
 
-        public List<Order> Order { get; set; }
+        public Queue<Order> Order { get; set; }
 
         public List<SpecialOffer> SpecialOffer { get; set; }
 
@@ -34,10 +34,8 @@ namespace S10273989D_PRG2Assignment
             this.RestaurantName = restaurantName;
             this.RestaurantEmail = restaurantEmail;
             Menu = new List<Menu>();
-            Order = new List<Order>();
+            Order = new Queue<Order>();
             SpecialOffer = new List<SpecialOffer>();
-
-            Order = new List<Order>();
         }   
 
         public void DisplayOrders()
