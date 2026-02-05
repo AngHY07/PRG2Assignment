@@ -26,6 +26,8 @@ namespace S10273989D_PRG2Assignment
 
         public Queue<Order> Order { get; set; }
 
+        public Stack<Order> RefundStack { get; set; } 
+
         public List<SpecialOffer> SpecialOffer { get; set; }
 
         public Restaurant(string restaurantId, string restaurantName, string restaurantEmail)

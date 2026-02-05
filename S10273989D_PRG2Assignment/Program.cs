@@ -147,7 +147,7 @@ void OrderInit()
             DateTime createdDateTime = DateTime.Parse(orderInfo[6]);
             double totalAmount = double.Parse(orderInfo[7]);
             string status = orderInfo[8];
-            string itemsline = foodInfo[1]; // not used yet
+            string itemsline = foodInfo[1]; 
 
             string[] items = itemsline.Split("|");
 
@@ -190,6 +190,11 @@ void OrderInit()
             );
 
             restaurantsObj[restaurant.RestaurantId].Order.Enqueue(order);
+            
+            if (status == "Cancelled" || status == "Rejected")
+            {
+                restaurantsObj[restaurant.RestaurantId].RefundStack.Push(order);
+            }
             foreach (OrderedFoodItem ofi in orderedFoodItems)
             {
                 order.AddOrderedFoodItem(ofi);
@@ -318,6 +323,8 @@ void CreateNewOrder()
 
     Console.WriteLine($"Order {newOrder.OrderID} created successfully! Status: Pending");
 }
+
+
 
 void MainMenu()
 {
