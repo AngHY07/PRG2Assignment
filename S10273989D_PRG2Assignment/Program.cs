@@ -13,6 +13,7 @@
 
 using Microsoft.VisualBasic;
 using S10273989D_PRG2Assignment;
+using System.Reflection.Metadata.Ecma335;
 
 Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
 
@@ -189,11 +190,11 @@ void OrderInit()
                 deliveryAddress
             );
 
-            restaurantsObj[restaurant.RestaurantId].Order.Enqueue(order);
+            restaurant.Order.Enqueue(order);
             
             if (status == "Cancelled" || status == "Rejected")
             {
-                restaurantsObj[restaurant.RestaurantId].RefundStack.Push(order);
+                restaurant.RefundStack.Push(order);
             }
             foreach (OrderedFoodItem ofi in orderedFoodItems)
             {
@@ -324,7 +325,129 @@ void CreateNewOrder()
     Console.WriteLine($"Order {newOrder.OrderID} created successfully! Status: Pending");
 }
 
+void ProcessOrder()
+{
+    int processCount = 0;
+    Queue<Order> orderQueuePop = new Queue<Order>();
+    bool quit = false;
+    Console.WriteLine("Process Order");
+    Console.WriteLine("=============");
+    Console.Write("Enter Restaurant ID: ");
+    string restaurantID = Console.ReadLine();
+    Console.WriteLine();
 
+
+    foreach(Order ord in restaurantsObj[restaurantID].Order)
+    {
+        if (quit)
+        {
+            break;
+        }
+        
+        int count = 1;
+        Console.WriteLine($"Order {ord.OrderID}:");
+        Console.WriteLine($"Customer : {ord.Customer.CustomerName}");
+        Console.WriteLine("Ordered Items: ");
+        foreach (OrderedFoodItem ofi in ord.OrderedFoodItem)
+        {
+            Console.WriteLine($"{count}. {ofi.ItemName} - {ofi.QtyOrdered}");
+            count += 1;
+        }
+        Console.WriteLine($"Delivery date/time: {ord.DeliveryDateTime.ToString("dd/MM/yyyy HH:mm")}");
+        Console.WriteLine($"Total Amount: ${ord.OrderTotal}");
+        Console.WriteLine($"Order Status: {ord.OrderStatus}\n");
+        while (true) 
+        {
+            Console.Write("[C]onfirm / [R]eject / [S]kip / [D]eliver/ [Q] Quit: ");
+            string statusChoice = Console.ReadLine().ToUpper();
+
+
+            if (statusChoice == "C")
+            {
+                if (ord.OrderStatus != "Pending")
+                {
+                    Console.WriteLine("\nOrder Status is not Pending! Can't Confirm!");
+                    continue;
+                }
+                ord.OrderStatus = "Preparing";
+                Console.WriteLine($"\nOrder {ord.OrderID} confirmed. Status: {ord.OrderStatus}");
+                processCount += 1;
+                orderQueuePop.Enqueue(ord);
+
+                break;
+
+
+            }
+            else if (statusChoice == "R")
+            {
+                if (ord.OrderStatus != "Pending")
+                {
+                    Console.WriteLine("\nOrder Status is not Pending! Can't Reject!");
+                    continue;
+                }
+                ord.OrderStatus = "Rejected";
+                ord.Restaurant.RefundStack.Push(ord);
+                Console.WriteLine($"\nOrder {ord.OrderID} rejected. Status: Rejected");
+                processCount += 1;
+                orderQueuePop.Enqueue(ord);
+
+
+                break;
+            }
+            else if (statusChoice == "S")
+            {
+
+                if (ord.OrderStatus == "Cancelled" || ord.OrderStatus == "Delivered" || ord.OrderStatus == "Rejected")
+                {
+                    Console.WriteLine($"\nOrder {ord.OrderID} skipped!");
+                    processCount += 1;
+                    orderQueuePop.Enqueue(ord);
+
+
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("\nOrder Status is not Cancelled, Delivered or Rejected. Can't Skip!");
+
+                    continue;
+                }
+
+            }
+            else if (statusChoice == "D")
+            {
+                if (ord.OrderStatus != "Preparing")
+                {
+                    Console.WriteLine("\nOrder Stauts is not Preparing! Can't Deiver!");
+                    continue;
+                }
+                ord.OrderStatus = "Delivered";
+                Console.WriteLine($"\nOrder {ord.OrderID} Delivered. Status {ord.OrderStatus}");
+                processCount += 1;
+                orderQueuePop.Enqueue(ord);
+
+                break;
+            }
+            else if (statusChoice == "Q")
+            {
+                processCount -= 1;
+                quit = true;
+                break;
+                
+            }
+        }
+    }
+    
+    for (int i = 0; i <= processCount; i++)
+    {
+        restaurantsObj[restaurantID].Order.Dequeue();
+    }
+    foreach (Order ord in orderQueuePop)
+    {
+        restaurantsObj[restaurantID].Order.Enqueue(ord);
+    }
+
+}
 
 void MainMenu()
 {
@@ -365,6 +488,10 @@ while(true)
     else if (inputChoice == 3)
     {
         CreateNewOrder();
+    }
+    else if (inputChoice == 4)
+    {
+        ProcessOrder();
     }
 
 

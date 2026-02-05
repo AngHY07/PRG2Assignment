@@ -37,6 +37,7 @@ namespace S10273989D_PRG2Assignment
             this.RestaurantEmail = restaurantEmail;
             Menu = new List<Menu>();
             Order = new Queue<Order>();
+            RefundStack = new Stack<Order>();
             SpecialOffer = new List<SpecialOffer>();
         }   
 
