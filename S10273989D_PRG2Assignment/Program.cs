@@ -17,6 +17,7 @@ using System.Net;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Xml.Serialization;
+using System.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
@@ -352,11 +353,11 @@ void ProcessOrder()
 
             foreach (Order ord in restaurantsObj[restaurantID].Order)
             {
+
                 if (quit)
                 {
                     break;
                 }
-
                 int count = 1;
                 Console.WriteLine($"Order {ord.OrderID}:");
                 Console.WriteLine($"Customer : {ord.Customer.CustomerName}");
@@ -380,12 +381,16 @@ void ProcessOrder()
                     {
                         if (ord.OrderStatus != "Pending")
                         {
-                            Console.WriteLine("\nOrder Status is not Pending! Can't Confirm!");
+                            Console.WriteLine("\nOrder Status is not Pending! Can't Confirm!\n");
                             continue;
                         }
                         ord.OrderStatus = "Preparing";
-                        Console.WriteLine($"\nOrder {ord.OrderID} confirmed. Status: {ord.OrderStatus}");
-                        processCount += 1;
+                        Console.WriteLine($"\nOrder {ord.OrderID} confirmed. Status: {ord.OrderStatus}\n");
+                        if (!(ord == restaurantsObj[restaurantID].Order.Last()))
+                        {
+                            processCount += 1;
+                        }
+
                         orderQueuePop.Enqueue(ord);
 
                         break;
@@ -396,13 +401,16 @@ void ProcessOrder()
                     {
                         if (ord.OrderStatus != "Pending")
                         {
-                            Console.WriteLine("\nOrder Status is not Pending! Can't Reject!");
+                            Console.WriteLine("\nOrder Status is not Pending! Can't Reject!\n");
                             continue;
                         }
                         ord.OrderStatus = "Rejected";
                         ord.Restaurant.RefundStack.Push(ord);
-                        Console.WriteLine($"\nOrder {ord.OrderID} rejected. Status: Rejected");
-                        processCount += 1;
+                        Console.WriteLine($"\nOrder {ord.OrderID} rejected. Status: Rejected\n");
+                        if (!(ord == restaurantsObj[restaurantID].Order.Last()))
+                        {
+                            processCount += 1;
+                        }
                         orderQueuePop.Enqueue(ord);
 
 
@@ -414,7 +422,10 @@ void ProcessOrder()
                         if (ord.OrderStatus == "Cancelled" || ord.OrderStatus == "Delivered" || ord.OrderStatus == "Rejected")
                         {
                             Console.WriteLine($"\nOrder {ord.OrderID} skipped!\n");
-                            processCount += 1;
+                            if (!(ord == restaurantsObj[restaurantID].Order.Last()))
+                            {
+                                processCount += 1;
+                            }
                             orderQueuePop.Enqueue(ord);
 
 
@@ -422,7 +433,7 @@ void ProcessOrder()
                         }
                         else
                         {
-                            Console.WriteLine("\nOrder Status is not Cancelled, Delivered or Rejected. Can't Skip!");
+                            Console.WriteLine("\nOrder Status is not Cancelled, Delivered or Rejected. Can't Skip!\n");
 
                             continue;
                         }
@@ -432,12 +443,16 @@ void ProcessOrder()
                     {
                         if (ord.OrderStatus != "Preparing")
                         {
-                            Console.WriteLine("\nOrder Status is not Preparing! Can't Deiver!");
+                            Console.WriteLine("\nOrder Status is not Preparing! Can't Deiver!\n");
                             continue;
                         }
                         ord.OrderStatus = "Delivered";
                         Console.WriteLine($"\nOrder {ord.OrderID} Delivered. Status {ord.OrderStatus}\n");
-                        processCount += 1;
+                        if (!(ord == restaurantsObj[restaurantID].Order.Last()))
+                        {
+                            processCount += 1;
+                        }
+
                         orderQueuePop.Enqueue(ord);
 
                         break;
