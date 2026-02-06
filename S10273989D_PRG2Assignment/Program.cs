@@ -330,187 +330,254 @@ void CreateNewOrder()
 
 void ProcessOrder()
 {
+    string restaurantID;
     int processCount = 0;
     Queue<Order> orderQueuePop = new Queue<Order>();
     bool quit = false;
-    Console.WriteLine("Process Order");
-    Console.WriteLine("=============");
-    Console.Write("Enter Restaurant ID: ");
-    string restaurantID = Console.ReadLine();
-    Console.WriteLine();
-
-
-    foreach(Order ord in restaurantsObj[restaurantID].Order)
+    while (true)
     {
-        if (quit)
+        try
         {
-            break;
-        }
-        
-        int count = 1;
-        Console.WriteLine($"Order {ord.OrderID}:");
-        Console.WriteLine($"Customer : {ord.Customer.CustomerName}");
-        Console.WriteLine("Ordered Items: ");
-        foreach (OrderedFoodItem ofi in ord.OrderedFoodItem)
-        {
-            Console.WriteLine($"{count}. {ofi.ItemName} - {ofi.QtyOrdered}");
-            count += 1;
-        }
-        Console.WriteLine($"Delivery date/time: {ord.DeliveryDateTime.ToString("dd/MM/yyyy HH:mm")}");
-        Console.WriteLine($"Total Amount: ${ord.OrderTotal}");
-        Console.WriteLine($"Order Status: {ord.OrderStatus}\n");
-        while (true) 
-        {
-            Console.Write("[C]onfirm / [R]eject / [S]kip / [D]eliver/ [Q] Quit: ");
-            string statusChoice = Console.ReadLine().ToUpper();
+            Console.WriteLine("Process Order");
+            Console.WriteLine("=============");
+            Console.Write("Enter Restaurant ID: ");
+            restaurantID = Console.ReadLine();
 
 
-            if (statusChoice == "C")
+            Console.WriteLine();
+
+
+            foreach (Order ord in restaurantsObj[restaurantID].Order)
             {
-                if (ord.OrderStatus != "Pending")
+                if (quit)
                 {
-                    Console.WriteLine("\nOrder Status is not Pending! Can't Confirm!");
-                    continue;
-                }
-                ord.OrderStatus = "Preparing";
-                Console.WriteLine($"\nOrder {ord.OrderID} confirmed. Status: {ord.OrderStatus}");
-                processCount += 1;
-                orderQueuePop.Enqueue(ord);
-
-                break;
-
-
-            }
-            else if (statusChoice == "R")
-            {
-                if (ord.OrderStatus != "Pending")
-                {
-                    Console.WriteLine("\nOrder Status is not Pending! Can't Reject!");
-                    continue;
-                }
-                ord.OrderStatus = "Rejected";
-                ord.Restaurant.RefundStack.Push(ord);
-                Console.WriteLine($"\nOrder {ord.OrderID} rejected. Status: Rejected");
-                processCount += 1;
-                orderQueuePop.Enqueue(ord);
-
-
-                break;
-            }
-            else if (statusChoice == "S")
-            {
-
-                if (ord.OrderStatus == "Cancelled" || ord.OrderStatus == "Delivered" || ord.OrderStatus == "Rejected")
-                {
-                    Console.WriteLine($"\nOrder {ord.OrderID} skipped!");
-                    processCount += 1;
-                    orderQueuePop.Enqueue(ord);
-
-
                     break;
                 }
-                else
+
+                int count = 1;
+                Console.WriteLine($"Order {ord.OrderID}:");
+                Console.WriteLine($"Customer : {ord.Customer.CustomerName}");
+                Console.WriteLine("Ordered Items: ");
+                foreach (OrderedFoodItem ofi in ord.OrderedFoodItem)
                 {
-                    Console.WriteLine("\nOrder Status is not Cancelled, Delivered or Rejected. Can't Skip!");
-
-                    continue;
+                    Console.WriteLine($"{count}. {ofi.ItemName} - {ofi.QtyOrdered}");
+                    count += 1;
                 }
-
-            }
-            else if (statusChoice == "D")
-            {
-                if (ord.OrderStatus != "Preparing")
+                Console.WriteLine($"Delivery date/time: {ord.DeliveryDateTime.ToString("dd/MM/yyyy HH:mm")}");
+                Console.WriteLine($"Total Amount: ${ord.OrderTotal}");
+                Console.WriteLine($"Order Status: {ord.OrderStatus}\n");
+                while (true)
                 {
-                    Console.WriteLine("\nOrder Stauts is not Preparing! Can't Deiver!");
-                    continue;
-                }
-                ord.OrderStatus = "Delivered";
-                Console.WriteLine($"\nOrder {ord.OrderID} Delivered. Status {ord.OrderStatus}");
-                processCount += 1;
-                orderQueuePop.Enqueue(ord);
 
-                break;
+                    Console.Write("[C]onfirm / [R]eject / [S]kip / [D]eliver/ [Q] Quit: ");
+                    string statusChoice = Console.ReadLine().ToUpper();
+
+
+                    if (statusChoice == "C")
+                    {
+                        if (ord.OrderStatus != "Pending")
+                        {
+                            Console.WriteLine("\nOrder Status is not Pending! Can't Confirm!");
+                            continue;
+                        }
+                        ord.OrderStatus = "Preparing";
+                        Console.WriteLine($"\nOrder {ord.OrderID} confirmed. Status: {ord.OrderStatus}");
+                        processCount += 1;
+                        orderQueuePop.Enqueue(ord);
+
+                        break;
+
+
+                    }
+                    else if (statusChoice == "R")
+                    {
+                        if (ord.OrderStatus != "Pending")
+                        {
+                            Console.WriteLine("\nOrder Status is not Pending! Can't Reject!");
+                            continue;
+                        }
+                        ord.OrderStatus = "Rejected";
+                        ord.Restaurant.RefundStack.Push(ord);
+                        Console.WriteLine($"\nOrder {ord.OrderID} rejected. Status: Rejected");
+                        processCount += 1;
+                        orderQueuePop.Enqueue(ord);
+
+
+                        break;
+                    }
+                    else if (statusChoice == "S")
+                    {
+
+                        if (ord.OrderStatus == "Cancelled" || ord.OrderStatus == "Delivered" || ord.OrderStatus == "Rejected")
+                        {
+                            Console.WriteLine($"\nOrder {ord.OrderID} skipped!\n");
+                            processCount += 1;
+                            orderQueuePop.Enqueue(ord);
+
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nOrder Status is not Cancelled, Delivered or Rejected. Can't Skip!");
+
+                            continue;
+                        }
+
+                    }
+                    else if (statusChoice == "D")
+                    {
+                        if (ord.OrderStatus != "Preparing")
+                        {
+                            Console.WriteLine("\nOrder Status is not Preparing! Can't Deiver!");
+                            continue;
+                        }
+                        ord.OrderStatus = "Delivered";
+                        Console.WriteLine($"\nOrder {ord.OrderID} Delivered. Status {ord.OrderStatus}\n");
+                        processCount += 1;
+                        orderQueuePop.Enqueue(ord);
+
+                        break;
+                    }
+                    else if (statusChoice == "Q")
+                    {
+                        processCount -= 1;
+                        quit = true;
+                        break;
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid Input! Try Again!");
+                        continue;
+                    }
+                }
             }
-            else if (statusChoice == "Q")
+
+            for (int i = 0; i <= processCount; i++)
             {
-                processCount -= 1;
-                quit = true;
-                break;
-                
+                restaurantsObj[restaurantID].Order.Dequeue();
             }
+            foreach (Order ord in orderQueuePop)
+            {
+                restaurantsObj[restaurantID].Order.Enqueue(ord);
+            }
+            break;
+        }
+        catch (KeyNotFoundException)
+        {
+            Console.WriteLine("Restaurant ID not found. Please retry!\n");
+            continue;
         }
     }
-    
-    for (int i = 0; i <= processCount; i++)
-    {
-        restaurantsObj[restaurantID].Order.Dequeue();
-    }
-    foreach (Order ord in orderQueuePop)
-    {
-        restaurantsObj[restaurantID].Order.Enqueue(ord);
-    }
-
 }
 
 void DeleteExistingOrder()
 {
-    int count = 0;
-    Console.WriteLine("Delete Order");
-    Console.WriteLine("=============");
-    Console.Write("Enter Customer Email: ");
-    string cEmail = Console.ReadLine();
-    Console.WriteLine("Pending Orders:");
-    foreach(Order ord in customerObj[cEmail].Orders)
+    string cEmail;
+    int count = 1;
+    int oID;
+    List <int> order = new List<int>();
+
+    while (true)
     {
-        if (ord.OrderStatus == "Pending")
+
+        try
         {
-            Console.WriteLine($"{ord.OrderID}");
+            Console.WriteLine("\nDelete Order");
+            Console.WriteLine("=============");
+            Console.Write("Enter Customer Email: ");
+            cEmail = Console.ReadLine();
+            Console.WriteLine("Pending Orders:");
+
+            foreach (Order ord in customerObj[cEmail].Orders)
+            {
+                if (ord.OrderStatus == "Pending")
+                {
+                    Console.WriteLine($"{ord.OrderID}");
+                    order.Add(ord.OrderID);
+                }
+
+            }
+        }
+        catch (KeyNotFoundException)
+        {
+            Console.WriteLine("Customer Email not found. Please retry!");
+            continue;
         }
 
-    }
-    Console.WriteLine("Enter Order ID: ");
-    int oID = int.Parse(Console.ReadLine());
-    if (orderObj[oID].OrderStatus != "Pending")
-    {
-        Console.WriteLine("Only Pending orders can be deleted.");
-        return;
-    }
-    else
-    {
-        Console.WriteLine();
 
-        Console.WriteLine($"Customer: {customerObj[cEmail].CustomerName}");
+        while (true)
+        {
+            try
+            {
+                Console.Write("Enter Order ID: ");
+                oID = int.Parse(Console.ReadLine());
+
+                if (!order.Contains(oID))
+                {
+                    Console.WriteLine("Order ID not found in pending orders. Please retry!");
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Invalid Order ID format. Please enter a valid integer.");
+                continue;
+            }
+        }
+
+      
+
+        Console.WriteLine($"\nCustomer: {customerObj[cEmail].CustomerName}");
         Console.WriteLine("Ordered Items: ");
         foreach (OrderedFoodItem ofi in orderObj[oID].OrderedFoodItem)
         {
             Console.WriteLine($"{count}. {ofi.ItemName} - {ofi.QtyOrdered}");
+
             count += 1;
         }
         Console.WriteLine($"Delivery date/time: {orderObj[oID].DeliveryDateTime.ToString("dd/MM/yyyy  HH:mm")}");
         Console.WriteLine($"Total Amount: ${orderObj[oID].OrderTotal}");
         Console.WriteLine($"Order Status: {orderObj[oID].OrderStatus}");
-        Console.Write("Confirm deletion? [Y/N]: ");
-        string choice = Console.ReadLine().ToUpper();
+                
 
-        if (choice == "Y")
+        while (true)
         {
-            orderObj[oID].OrderStatus = "Cancelled";
-            orderObj[oID].Restaurant.RefundStack.Push(orderObj[oID]);
-            Console.WriteLine($"Order {orderObj[oID].OrderID} cancelled. Refund of ${orderObj[oID].OrderTotal} processed.");
+            Console.Write("Confirm deletion? [Y/N]: ");
+            string choice = Console.ReadLine().ToUpper();
+
+
+            if (choice == "Y")
+            {
+                orderObj[oID].OrderStatus = "Cancelled";
+                orderObj[oID].Restaurant.RefundStack.Push(orderObj[oID]);
+                Console.WriteLine($"\nOrder {orderObj[oID].OrderID} cancelled. Refund of ${orderObj[oID].OrderTotal.ToString("F2")} processed.");
+                break;
+            }
+            else if (choice == "N")
+            {
+                Console.WriteLine("\nDeletion cancelled.");
+                break;
+            }
+            else
+            {
+                Console.WriteLine("\nInvalid choice. Please retry!");
+                        
+            }
         }
-        else
-        {
-            Console.WriteLine("Deletion cancelled.");
-        }
+        break;
+
     }
-
-
-
 }
 
 void MainMenu()
 {
-    Console.WriteLine("===== Gruberoo Food Delivery System =====");
+    Console.WriteLine("\n===== Gruberoo Food Delivery System =====");
     Console.WriteLine("1. List all restaurants and menu items");
     Console.WriteLine("2. List all orders");
     Console.WriteLine("3. Create a new order");
@@ -522,45 +589,53 @@ void MainMenu()
 }
 
 RestaurantInit();
-CustomerInit();
 FoodItemInit();
+CustomerInit();
 OrderInit();
 
 
 while(true)
 {
-    MainMenu();
-    int inputChoice = int.Parse(Console.ReadLine());
+    try
+    {
+        MainMenu();
+        int inputChoice = int.Parse(Console.ReadLine());
 
-    if (inputChoice == 0)
-    {
-        break;
-    } 
-    else if (inputChoice == 1)
-    {
-        ListAllRestaurantsAndMenuItems();
+        if (inputChoice == 0)
+        {
+            break;
+        }
+        else if (inputChoice == 1)
+        {
+            ListAllRestaurantsAndMenuItems();
+        }
+        else if (inputChoice == 2)
+        {
+            ListAllOrder();
+        }
+        else if (inputChoice == 3)
+        {
+            CreateNewOrder();
+        }
+        else if (inputChoice == 4)
+        {
+            ProcessOrder();
+        }
+        else if (inputChoice == 6)
+        {
+            DeleteExistingOrder();
+        }
+        else
+        {
+            Console.WriteLine("Invalid Input Choice!");
+        }
     }
-    else if (inputChoice == 2)
+    catch(FormatException)
     {
-        ListAllOrder();
+        Console.WriteLine("Invalid input format. Please enter an integer choice.");
+        continue;
     }
-    else if (inputChoice == 3)
-    {
-        CreateNewOrder();
-    }
-    else if (inputChoice == 4)
-    {
-        ProcessOrder();
-    }
-    else if  (inputChoice == 6)
-    {
-        DeleteExistingOrder();
-    }
-    {
-        
-    }
-
-
+    
 }    
 
 
