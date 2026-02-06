@@ -13,8 +13,11 @@
 
 using Microsoft.VisualBasic;
 using S10273989D_PRG2Assignment;
+using System.Net;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography;
 using System.Xml.Serialization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
 
@@ -575,6 +578,7 @@ void DeleteExistingOrder()
     }
 }
 
+
 void MainMenu()
 {
     Console.WriteLine("\n===== Gruberoo Food Delivery System =====");
@@ -588,6 +592,7 @@ void MainMenu()
     Console.Write("Enter your choice: ");
 }
 
+Console.WriteLine("Welcome to the Gruberoo Food Delivery System");
 RestaurantInit();
 FoodItemInit();
 CustomerInit();
@@ -603,6 +608,32 @@ while(true)
 
         if (inputChoice == 0)
         {
+            using (StreamWriter sw = new StreamWriter("queue.csv", false))
+            {
+                foreach(int ord in orderObj.Keys)
+                {
+                    Order ordObj = orderObj[ord];
+
+                    string itemsLine = string.Join("|", ordObj.OrderedFoodItem.Select(ofi => $"{ofi.ItemName},{ofi.QtyOrdered}"));
+                    sw.WriteLine($"{ordObj.OrderID},{ordObj.Customer.EmailAddress},{ordObj.Restaurant.RestaurantId},{ordObj.DeliveryDateTime:dd'/'MM'/'yyyy},{ordObj.DeliveryDateTime:HH:mm},{ordObj.DeliveryAddress},{ordObj.OrderDateTime},{ordObj.OrderTotal},{ordObj.OrderStatus},\"{itemsLine}\"");
+                    
+                }
+            }
+
+
+            using (StreamWriter sw = new StreamWriter("stack.csv", false))
+            {
+                foreach (string resID in restaurantsObj.Keys)
+                {
+                    Restaurant resObj = restaurantsObj[resID];
+                    foreach (Order ord in resObj.RefundStack)
+                    {
+                        string itemsLine = string.Join("|", ord.OrderedFoodItem.Select(ofi => $"{ofi.ItemName},{ofi.QtyOrdered}"));
+                        sw.WriteLine($"{ord.OrderID},{ord.Customer.EmailAddress},{ord.Restaurant.RestaurantId},{ord.DeliveryDateTime:dd'/'MM'/'yyyy},{ord.DeliveryDateTime:HH:mm},{ord.DeliveryAddress},{ord.OrderDateTime},{ord.OrderTotal},{ord.OrderStatus},\"{itemsLine}\"");
+                    }
+                }
+            }   
+
             break;
         }
         else if (inputChoice == 1)
