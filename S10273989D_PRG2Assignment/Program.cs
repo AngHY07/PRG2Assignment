@@ -14,6 +14,7 @@
 using Microsoft.VisualBasic;
 using S10273989D_PRG2Assignment;
 using System.Reflection.Metadata.Ecma335;
+using System.Xml.Serialization;
 
 Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
 
@@ -189,6 +190,8 @@ void OrderInit()
                 totalAmount,
                 deliveryAddress
             );
+
+            customer.AddOrder(order);
 
             restaurant.Order.Enqueue(order);
             
@@ -449,6 +452,62 @@ void ProcessOrder()
 
 }
 
+void DeleteExistingOrder()
+{
+    int count = 0;
+    Console.WriteLine("Delete Order");
+    Console.WriteLine("=============");
+    Console.Write("Enter Customer Email: ");
+    string cEmail = Console.ReadLine();
+    Console.WriteLine("Pending Orders:");
+    foreach(Order ord in customerObj[cEmail].Orders)
+    {
+        if (ord.OrderStatus == "Pending")
+        {
+            Console.WriteLine($"{ord.OrderID}");
+        }
+
+    }
+    Console.WriteLine("Enter Order ID: ");
+    int oID = int.Parse(Console.ReadLine());
+    if (orderObj[oID].OrderStatus != "Pending")
+    {
+        Console.WriteLine("Only Pending orders can be deleted.");
+        return;
+    }
+    else
+    {
+        Console.WriteLine();
+
+        Console.WriteLine($"Customer: {customerObj[cEmail].CustomerName}");
+        Console.WriteLine("Ordered Items: ");
+        foreach (OrderedFoodItem ofi in orderObj[oID].OrderedFoodItem)
+        {
+            Console.WriteLine($"{count}. {ofi.ItemName} - {ofi.QtyOrdered}");
+            count += 1;
+        }
+        Console.WriteLine($"Delivery date/time: {orderObj[oID].DeliveryDateTime.ToString("dd/MM/yyyy  HH:mm")}");
+        Console.WriteLine($"Total Amount: ${orderObj[oID].OrderTotal}");
+        Console.WriteLine($"Order Status: {orderObj[oID].OrderStatus}");
+        Console.Write("Confirm deletion? [Y/N]: ");
+        string choice = Console.ReadLine().ToUpper();
+
+        if (choice == "Y")
+        {
+            orderObj[oID].OrderStatus = "Cancelled";
+            orderObj[oID].Restaurant.RefundStack.Push(orderObj[oID]);
+            Console.WriteLine($"Order {orderObj[oID].OrderID} cancelled. Refund of ${orderObj[oID].OrderTotal} processed.");
+        }
+        else
+        {
+            Console.WriteLine("Deletion cancelled.");
+        }
+    }
+
+
+
+}
+
 void MainMenu()
 {
     Console.WriteLine("===== Gruberoo Food Delivery System =====");
@@ -492,6 +551,13 @@ while(true)
     else if (inputChoice == 4)
     {
         ProcessOrder();
+    }
+    else if  (inputChoice == 6)
+    {
+        DeleteExistingOrder();
+    }
+    {
+        
     }
 
 
