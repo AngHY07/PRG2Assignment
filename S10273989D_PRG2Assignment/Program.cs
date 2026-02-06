@@ -495,6 +495,7 @@ void DeleteExistingOrder()
     string cEmail;
     int count = 1;
     int oID;
+    int pendingCount = 0;
     List <int> order = new List<int>();
 
     while (true)
@@ -508,14 +509,21 @@ void DeleteExistingOrder()
             cEmail = Console.ReadLine();
             Console.WriteLine("Pending Orders:");
 
+
             foreach (Order ord in customerObj[cEmail].Orders)
             {
                 if (ord.OrderStatus == "Pending")
                 {
                     Console.WriteLine($"{ord.OrderID}");
                     order.Add(ord.OrderID);
+                    pendingCount += 1;
                 }
+            }
 
+            if (pendingCount ==0)
+            {
+                Console.WriteLine("No pending orders found for this customer.");
+                continue;
             }
         }
         catch (KeyNotFoundException)
