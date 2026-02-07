@@ -20,6 +20,8 @@ using System.Xml.Serialization;
 using System.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
+Stack<Order> Archive = new Stack<Order>();
+
 Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
 
 Dictionary<string, FoodItem> foodItemObj = new Dictionary<string, FoodItem>();
@@ -198,10 +200,14 @@ void OrderInit()
             customer.AddOrder(order);
 
             restaurant.Order.Enqueue(order);
-            
+            if (status == "Delivered")
+            {
+                Archive.Push(order);
+            }
             if (status == "Cancelled" || status == "Rejected")
             {
                 restaurant.RefundStack.Push(order);
+                Archive.Push(order);
             }
             foreach (OrderedFoodItem ofi in orderedFoodItems)
             {
@@ -347,7 +353,11 @@ void ProcessOrder()
             Console.Write("Enter Restaurant ID: ");
             restaurantID = Console.ReadLine();
 
-
+            if (restaurantsObj[restaurantID].Order.Count == 0)
+            {
+                Console.WriteLine("No orders to process for this restaurant.\n");
+                continue;
+            }
             Console.WriteLine();
 
 
@@ -405,6 +415,7 @@ void ProcessOrder()
                             continue;
                         }
                         ord.OrderStatus = "Rejected";
+                        Archive.Push(ord);
                         ord.Restaurant.RefundStack.Push(ord);
                         Console.WriteLine($"\nOrder {ord.OrderID} rejected. Status: Rejected\n");
                         if (!(ord == restaurantsObj[restaurantID].Order.Last()))
@@ -447,6 +458,7 @@ void ProcessOrder()
                             continue;
                         }
                         ord.OrderStatus = "Delivered";
+                        Archive.Push(ord);
                         Console.WriteLine($"\nOrder {ord.OrderID} Delivered. Status {ord.OrderStatus}\n");
                         if (!(ord == restaurantsObj[restaurantID].Order.Last()))
                         {
@@ -581,6 +593,7 @@ void DeleteExistingOrder()
             if (choice == "Y")
             {
                 orderObj[oID].OrderStatus = "Cancelled";
+                Archive.Push(orderObj[oID]);
                 orderObj[oID].Restaurant.RefundStack.Push(orderObj[oID]);
                 Console.WriteLine($"\nOrder {orderObj[oID].OrderID} cancelled. Refund of ${orderObj[oID].OrderTotal.ToString("F2")} processed.");
                 break;
@@ -601,7 +614,99 @@ void DeleteExistingOrder()
     }
 }
 
+void BulkProcessUnprocessedOrders()
+{
 
+    double orderCount = 0;
+    double processedCount = 0;
+    double rejectCount = 0;
+    double prepareCount = 0;
+    double totalorders = 0;
+    double individualRCount = 0;
+    double individualPCount = 0;
+
+
+    foreach (string restaurantID in restaurantsObj.Keys)
+    {
+        int rPrepareCount = 0;
+        int rRejectCount = 0;
+        int rProcessCount = 0;
+        int rTotalOrder = 0;
+        int rindividualRCount = 0;
+        int rindividualPCount = 0;
+
+        Restaurant rObj = restaurantsObj[restaurantID];
+        foreach (Order ord in rObj.Order)
+        {
+            totalorders += 1;
+            rTotalOrder += 1;
+            if (ord.OrderStatus == "Preparing")
+            {
+                prepareCount += 1;
+                rPrepareCount += 1;
+            }
+            else if (ord.OrderStatus == "Rejected")
+            {
+                rejectCount += 1;
+                rRejectCount += 0;
+            }
+
+            if (ord.OrderStatus != "Pending")
+            {
+                continue;
+            }
+
+            TimeSpan deliverytime = ord.DeliveryDateTime - ord.OrderDateTime;
+
+            int diffdays = deliverytime.Days;
+            int hours = diffdays * 24;
+            hours += deliverytime.Hours;
+
+            if (hours < 1)
+            {
+                ord.OrderStatus = "Rejected";
+                ord.Restaurant.RefundStack.Push(ord);
+                Archive.Push(ord);
+                rindividualRCount += 1;
+                individualRCount += 1;
+                rRejectCount += 1;
+                rejectCount += 1;
+                processedCount += 1;
+                rProcessCount += 1;
+            }
+            else
+            {
+                ord.OrderStatus = "Preparing";
+                rindividualPCount += 1;
+                individualPCount += 1;
+                rPrepareCount += 1;
+                prepareCount += 1;
+                processedCount += 1;
+                rProcessCount += 1;
+            }
+        }
+        Console.WriteLine($"\nSummary Statistics for Restaurant [{rObj.RestaurantId}]:");
+        Console.WriteLine($"Number of Order Processed: {rProcessCount}");
+        Console.WriteLine($"Number of Pending Status Before Processed: {rProcessCount}");
+        Console.WriteLine($"Total Number of orders processed to Preparing status: {rindividualPCount}");
+        Console.WriteLine($"Total Number of orders processed to Rejected status: {rindividualRCount}");
+        Console.WriteLine($"Number of order with Preparing status: {rProcessCount}");
+        Console.WriteLine($"Number of order with Rejected status: {rRejectCount}");
+        Console.WriteLine($"Restaurant {rObj.RestaurantId} Total Orders: {rTotalOrder}\n");
+
+    }
+    Console.WriteLine("=======================================================================");
+    Console.WriteLine("Summary Statistics for all restaurants:");
+    Console.WriteLine($"Number of Order Processed: {processedCount}");
+    Console.WriteLine($"Number of Pending Status Before Processed: {processedCount}");
+    Console.WriteLine($"Total Number of orders processed to Preparing status: {individualPCount}");
+    Console.WriteLine($"Total Number of orders processed to Rejected status: {individualRCount}");
+    Console.WriteLine($"Total Number of order with Preparing status: {prepareCount}");
+    Console.WriteLine($"Total Number of order with Rejected status: {rejectCount}");
+    Console.WriteLine($"Percentage of automatically processed orders against all orders: {((processedCount / totalorders) * 100).ToString("F2")}%");
+    Console.WriteLine("=======================================================================");
+
+}
 void MainMenu()
 {
     Console.WriteLine("\n===== Gruberoo Food Delivery System =====");
@@ -611,6 +716,7 @@ void MainMenu()
     Console.WriteLine("4. Process an order");
     Console.WriteLine("5. Modify an existing order");
     Console.WriteLine("6. Delete an existing order");
+    Console.WriteLine("7. Process all unprocessed orders ");
     Console.WriteLine("0. Exit");
     Console.Write("Enter your choice: ");
 }
@@ -675,9 +781,18 @@ while(true)
         {
             ProcessOrder();
         }
+        else if (inputChoice ==5)
+        {
+            //to be implemented
+        }
         else if (inputChoice == 6)
         {
             DeleteExistingOrder();
+        }
+        else if (inputChoice == 7)
+        {
+
+            BulkProcessUnprocessedOrders();
         }
         else
         {
