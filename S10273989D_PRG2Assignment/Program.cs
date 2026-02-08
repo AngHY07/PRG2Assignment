@@ -254,12 +254,31 @@ void CreateNewOrder()
     string cEmail = Console.ReadLine();
     Console.Write("Enter Restaurant ID: ");
     string rID = Console.ReadLine();
+    if (string.IsNullOrWhiteSpace(rID) || !restaurantsObj.ContainsKey(rID))
+    {
+        Console.WriteLine("Invalid restaurant ID.");
+        return;
+    }
+
     Console.Write("Enter Delivery Date (dd/mm/yyyy): ");
-    DateTime dDate = DateTime.Parse(Console.ReadLine());
+    if (!DateTime.TryParse(Console.ReadLine(), out DateTime dDate))
+    {
+        Console.WriteLine("Invalid delivery date format.");
+        return;
+    }
     Console.Write("Enter Delivery Time (hh:mm): ");
-    DateTime dTime = DateTime.Parse(Console.ReadLine());
+    if (!DateTime.TryParse(Console.ReadLine(), out DateTime dTime))
+    {
+        Console.WriteLine("Invalid delivery time format.");
+        return;
+    }
     Console.Write("Enter Delivery Address: ");
     string dAddress = Console.ReadLine();
+    if (string.IsNullOrWhiteSpace(dAddress))
+    {
+        Console.WriteLine("Delivery address cannot be empty.");
+        return;
+    }
     DateTime deliveryDateTime = dDate.Date + dTime.TimeOfDay;
 
     Console.WriteLine("Available Food Items:");
@@ -281,26 +300,46 @@ void CreateNewOrder()
             Console.WriteLine($"{i + 1}. {fi.ItemName} - ${fi.ItemPrice:F2}");
         }
 
-     while (true)
+    bool itemAdded = false;
+
+    while (true)
      {
          Console.Write("Enter item number (0 to finish) : ");
-         int choice = int.Parse(Console.ReadLine());
-         if (choice == 0)
+        if (!int.TryParse(Console.ReadLine(), out int choice))
+        {
+            Console.WriteLine("Invalid item number.");
+            continue;
+        }
+        if (choice == 0)
          {
             break;
          }
-         FoodItem selectedItem = res.Menu[0].FoodItems[choice - 1];
+        if (choice < 1 || choice > res.Menu[0].FoodItems.Count)
+        {
+            Console.WriteLine("Item number out of range.");
+            continue;
+        }
+        FoodItem selectedItem = res.Menu[0].FoodItems[choice - 1];
          Console.Write("Enter quantity: ");
-         int quantity = int.Parse(Console.ReadLine());
-         OrderedFoodItem orderedItem = new OrderedFoodItem(
+        if (!int.TryParse(Console.ReadLine(), out int quantity) || quantity <= 0)
+        {
+            Console.WriteLine("Quantity must be a positive number.");
+            continue;
+        }
+        OrderedFoodItem orderedItem = new OrderedFoodItem(
          selectedItem.ItemName,
          selectedItem.ItemDesc,
          selectedItem.ItemPrice,
          quantity
          );
         newOrder.AddOrderedFoodItem(orderedItem);
+        itemAdded = true;
     }
-
+    if (!itemAdded)
+    {
+        Console.WriteLine("Order must contain at least one item.");
+        return;
+    }
     Console.Write("Add special request? [Y/N] : ");
     string specialReqChoice = Console.ReadLine().ToUpper();
 
@@ -314,11 +353,22 @@ void CreateNewOrder()
     Console.WriteLine($"Order Total: ${(totalPayment - 5):F2} + $5.00 (delivery) = ${totalPayment:F2}");
     Console.Write("Proceed to payment? [Y/N] : ");
     string paymentChoice = Console.ReadLine().ToUpper();
+    if (paymentChoice != "Y" && paymentChoice != "N")
+    {
+        Console.WriteLine("Invalid choice.");
+        return;
+    }
     if (paymentChoice == "N")
         return;
     Console.WriteLine("Payment method:");
     Console.Write("[CC] Credit Card / [PP] PayPal / [CD] Cash on Delivery: ");
-    newOrder.OrderPaymentMethod = Console.ReadLine().ToUpper();
+    string paymentMethod = Console.ReadLine().ToUpper();
+    if (paymentMethod != "CC" && paymentMethod != "PP" && paymentMethod != "CD")
+    {
+        Console.WriteLine("Invalid payment method.");
+        return;
+    }
+    newOrder.OrderPaymentMethod = paymentMethod;
     newOrder.OrderPaid = true;
 
     orderObj.Add(newOrder.OrderID, newOrder);
@@ -839,6 +889,48 @@ void BulkProcessUnprocessedOrders()
     Console.WriteLine("=======================================================================");
 
 }
+
+void DisplayTotalOrderAmount()
+{
+    Console.WriteLine("Total Order Amount Report");
+    Console.WriteLine("=========================");
+
+    double grandTotalOrders = 0;
+    double grandTotalRefunds = 0;
+
+    foreach (Restaurant rest in restaurantsObj.Values)
+    {
+        double restaurantOrderTotal = 0;
+        double restaurantRefundTotal = 0;
+
+        foreach (Order ord in orderObj.Values)
+        {
+            if (ord.Restaurant.RestaurantId == rest.RestaurantId)
+            {
+                if (ord.OrderStatus == "Delivered")
+                {
+                    restaurantOrderTotal += (ord.OrderTotal - 5);
+                }
+                else if (ord.OrderStatus == "Refunded")
+                {
+                    restaurantRefundTotal += ord.OrderTotal;
+                }
+            }
+        }
+
+        Console.WriteLine($"\nRestaurant: {rest.RestaurantName}");
+        Console.WriteLine($"Total Order Amount: ${restaurantOrderTotal:F2}");
+        Console.WriteLine($"Total Refunds: ${restaurantRefundTotal:F2}");
+
+        grandTotalOrders += restaurantOrderTotal;
+        grandTotalRefunds += restaurantRefundTotal;
+    }
+
+    Console.WriteLine("\n=========================");
+    Console.WriteLine($"Overall Total Orders: ${grandTotalOrders:F2}");
+    Console.WriteLine($"Overall Total Refunds: ${grandTotalRefunds:F2}");
+    Console.WriteLine($"Final Amount Earned by Gruberoo: ${(grandTotalOrders - grandTotalRefunds):F2}");
+}
 void MainMenu()
 {
     Console.WriteLine("\n===== Gruberoo Food Delivery System =====");
@@ -849,6 +941,7 @@ void MainMenu()
     Console.WriteLine("5. Modify an existing order");
     Console.WriteLine("6. Delete an existing order");
     Console.WriteLine("7. Process all unprocessed orders ");
+    Console.WriteLine("8. Display total order amount ");
     Console.WriteLine("0. Exit");
     Console.Write("Enter your choice: ");
 }
@@ -925,6 +1018,11 @@ while(true)
         {
 
             BulkProcessUnprocessedOrders();
+        }
+        else if (inputChoice == 8)
+        {
+
+            DisplayTotalOrderAmount();
         }
         else
         {
