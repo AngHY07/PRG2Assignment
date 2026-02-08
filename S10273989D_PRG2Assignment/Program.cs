@@ -502,6 +502,138 @@ void ProcessOrder()
     }
 }
 
+void ModifyOrder()
+{
+    Console.WriteLine("Modify Order");
+    Console.WriteLine("============");
+
+    Console.Write("Enter Customer Email: ");
+    string cEmail = Console.ReadLine();
+
+    if (!customerObj.ContainsKey(cEmail))
+    {
+        Console.WriteLine("Customer email not found.");
+        return;
+    }
+
+    Console.WriteLine("Pending Orders:");
+    List<int> pendingOrders = new List<int>();
+
+    foreach (Order ord in customerObj[cEmail].Orders)
+    {
+        if (ord.OrderStatus == "Pending")
+        {
+            Console.WriteLine(ord.OrderID);
+            pendingOrders.Add(ord.OrderID);
+        }
+    }
+
+    if (pendingOrders.Count == 0)
+    {
+        Console.WriteLine("No pending orders found.");
+        return;
+    }
+
+    Console.Write("Enter Order ID: ");
+    if (!int.TryParse(Console.ReadLine(), out int oID) || !pendingOrders.Contains(oID))
+    {
+        Console.WriteLine("Invalid Order ID.");
+        return;
+    }
+
+    Order order = orderObj[oID];
+
+    Console.WriteLine("\nOrder Items:");
+    for (int i = 0; i < order.OrderedFoodItem.Count; i++)
+    {
+        Console.WriteLine($"{i + 1}. {order.OrderedFoodItem[i].ItemName} - {order.OrderedFoodItem[i].QtyOrdered}");
+    }
+
+    Console.WriteLine($"Address:\n{order.DeliveryAddress}");
+    Console.WriteLine($"Delivery Date/Time:\n{order.DeliveryDateTime:dd/MM/yyyy, HH:mm}");
+
+    Console.Write("\nModify: [1] Items [2] Address [3] Delivery Time: ");
+    if (!int.TryParse(Console.ReadLine(), out int modifyChoice) || modifyChoice < 1 || modifyChoice > 3)
+    {
+        Console.WriteLine("Invalid modification option.");
+        return;
+    }
+
+    double oldTotal = order.OrderTotal;
+
+    if (modifyChoice == 1)
+    {
+        Console.Write("Enter item number to modify: ");
+        if (!int.TryParse(Console.ReadLine(), out int itemNo) ||
+            itemNo < 1 || itemNo > order.OrderedFoodItem.Count)
+        {
+            Console.WriteLine("Invalid item number.");
+            return;
+        }
+
+        Console.Write("Enter new quantity: ");
+        if (!int.TryParse(Console.ReadLine(), out int newQty) || newQty <= 0)
+        {
+            Console.WriteLine("Quantity must be a positive number.");
+            return;
+        }
+
+        order.OrderedFoodItem[itemNo - 1].QtyOrdered = newQty;
+    }
+    else if (modifyChoice == 2)
+    {
+        Console.Write("Enter new delivery address: ");
+        string newAddress = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(newAddress))
+        {
+            Console.WriteLine("Delivery address cannot be empty.");
+            return;
+        }
+
+        order.DeliveryAddress = newAddress;
+    }
+    else if (modifyChoice == 3)
+    {
+        Console.Write("Enter new delivery time (hh:mm): ");
+        if (!DateTime.TryParse(Console.ReadLine(), out DateTime newTime))
+        {
+            Console.WriteLine("Invalid time format.");
+            return;
+        }
+
+        order.DeliveryDateTime = order.DeliveryDateTime.Date + newTime.TimeOfDay;
+    }
+
+    double newTotal = order.CalculateOrderTotal();
+
+    if (newTotal > oldTotal)
+    {
+        Console.WriteLine($"Additional payment required: ${(newTotal - oldTotal):F2}");
+        Console.Write("Proceed to payment? [Y/N]: ");
+
+        if (Console.ReadLine().ToUpper() != "Y")
+        {
+            order.OrderTotal = oldTotal;
+            Console.WriteLine("Payment cancelled. Changes reverted.");
+            return;
+        }
+
+        Console.Write("Payment method [CC/PP/CD]: ");
+        string method = Console.ReadLine().ToUpper();
+
+        if (method != "CC" && method != "PP" && method != "CD")
+        {
+            Console.WriteLine("Invalid payment method.");
+            return;
+        }
+
+        order.OrderPaymentMethod = method;
+        order.OrderPaid = true;
+    }
+
+    Console.WriteLine("Order updated successfully!");
+}
 void DeleteExistingOrder()
 {
     string cEmail;
@@ -783,7 +915,7 @@ while(true)
         }
         else if (inputChoice ==5)
         {
-            //to be implemented
+            ModifyOrder();
         }
         else if (inputChoice == 6)
         {
