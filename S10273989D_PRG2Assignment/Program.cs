@@ -366,6 +366,7 @@ void CreateNewOrder()
 
     while (true)
     {
+        
         Console.Write("Enter item number (0 to finish, X to cancel) : ");
         if (!int.TryParse(Console.ReadLine(), out int choice))
         {
@@ -389,43 +390,49 @@ void CreateNewOrder()
             Console.WriteLine("Quantity must be a positive number.");
             continue;
         }
+        while (true)
+        {
+            
+            Console.Write("Add special request? [Y/N] : ");
+            string specialReqChoice = Console.ReadLine().ToUpper();
 
-        Console.Write("Add special request? [Y/N] : ");
-        string specialReqChoice = Console.ReadLine().ToUpper();
-
-        if (specialReqChoice == "Y")
-        {
-            Console.Write("Enter special request: ");
-            string specialRequest = Console.ReadLine();
-            OrderedFoodItem orderedItem = new OrderedFoodItem(
-                selectedItem.ItemName,
-                selectedItem.ItemDesc,
-                selectedItem.ItemPrice,
-                specialRequest,
-                quantity
-            );
-            newOrder.AddOrderedFoodItem(orderedItem);
-            itemAdded = true;
-            continue;
-        }
-        if (specialReqChoice == "N")
-        {
-            OrderedFoodItem orderedItem = new OrderedFoodItem(
-                selectedItem.ItemName,
-                selectedItem.ItemDesc,
-                selectedItem.ItemPrice,
-                quantity
-            );
-            newOrder.AddOrderedFoodItem(orderedItem);
-            itemAdded = true;
-            continue;
-        }
-        if (specialReqChoice != "Y" && specialReqChoice != "N")
-        {
-            Console.WriteLine("Invalid choice.");
-            continue;
+            if (specialReqChoice == "Y")
+            {
+                Console.Write("Enter special request: ");
+                string specialRequest = Console.ReadLine();
+                OrderedFoodItem orderedItem = new OrderedFoodItem(
+                    selectedItem.ItemName,
+                    selectedItem.ItemDesc,
+                    selectedItem.ItemPrice,
+                    specialRequest,
+                    quantity
+                );
+                newOrder.AddOrderedFoodItem(orderedItem);
+                itemAdded = true;
+                Console.WriteLine();
+                break;
+            }
+            if (specialReqChoice == "N")
+            {
+                OrderedFoodItem orderedItem = new OrderedFoodItem(
+                    selectedItem.ItemName,
+                    selectedItem.ItemDesc,
+                    selectedItem.ItemPrice,
+                    quantity
+                );
+                newOrder.AddOrderedFoodItem(orderedItem);
+                itemAdded = true;
+                Console.WriteLine();
+                break;
+            }
+            if (specialReqChoice != "Y" && specialReqChoice != "N")
+            {
+                Console.WriteLine("Invalid choice. Enter Y or N\n");
+                continue;
+            }
         }
     }
+
 
     if (!itemAdded)
     {
@@ -434,29 +441,32 @@ void CreateNewOrder()
     }
 
     double totalPayment = newOrder.CalculateOrderTotal();
-    Console.WriteLine($"Order Total: ${(totalPayment - 5):F2} + $5.00 (delivery) = ${totalPayment:F2}");
+    Console.WriteLine($"\nOrder Total: ${(totalPayment - 5):F2} + $5.00 (delivery) = ${totalPayment:F2}");
     string paymentChoice;
     while (true)
     {
-        Console.Write("Proceed to payment? [Y/N/X]: ");
+        Console.Write("Proceed to payment? [Y/N]: ");
         paymentChoice = Console.ReadLine().ToUpper();
 
-        if (paymentChoice == "X")
+        if (paymentChoice == "N")
         {
             Console.WriteLine("Order creation cancelled.");
             return;
         }
 
-        if (paymentChoice == "Y" || paymentChoice == "N")
+        if (paymentChoice == "Y")
             break;
 
-        Console.WriteLine("Invalid choice. Please enter Y, N or X.");
+        Console.WriteLine("Invalid choice. Please enter Y, N\n");
     }
+
+
 
     string paymentMethod;
     while (true)
     {
-        Console.Write("[CC] Credit Card / [PP] PayPal / [CD] Cash on Delivery / [X] Cancel: ");
+        Console.WriteLine("\nPayment Method: ");
+        Console.Write("[CC] Credit Card / [PP] PayPal / [CD] Cash on Delivery/ [X] Cancel: ");
         paymentMethod = Console.ReadLine().ToUpper();
 
         if (paymentMethod == "X")
@@ -1139,6 +1149,7 @@ void MainMenu()
     Console.WriteLine("6. Delete an existing order");
     Console.WriteLine("7. Process all unprocessed orders ");
     Console.WriteLine("8. Display total order amount ");
+    
     Console.WriteLine("0. Exit");
     Console.Write("Enter your choice: ");
 }
