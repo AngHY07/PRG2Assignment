@@ -250,35 +250,97 @@ void CreateNewOrder()
 {
     Console.WriteLine("Create New Order");
     Console.WriteLine("================");
-    Console.Write("Enter Customer Email: ");
-    string cEmail = Console.ReadLine();
-    Console.Write("Enter Restaurant ID: ");
-    string rID = Console.ReadLine();
-    if (string.IsNullOrWhiteSpace(rID) || !restaurantsObj.ContainsKey(rID))
+    string cEmail;
+    while (true)
     {
-        Console.WriteLine("Invalid restaurant ID.");
-        return;
+        Console.Write("Enter Customer Email [X to Cancel]: ");
+        cEmail = Console.ReadLine();
+
+        if (cEmail.ToUpper() == "X")
+        {
+            Console.WriteLine("Order creation cancelled.");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(cEmail) && customerObj.ContainsKey(cEmail))
+            break;
+
+        Console.WriteLine("Invalid customer email.");
     }
 
-    Console.Write("Enter Delivery Date (dd/mm/yyyy): ");
-    if (!DateTime.TryParse(Console.ReadLine(), out DateTime dDate))
+
+    string rID;
+    while (true)
     {
-        Console.WriteLine("Invalid delivery date format.");
-        return;
+        Console.Write("Enter Restaurant ID [X to Cancel]: ");
+        rID = Console.ReadLine();
+
+        if (rID.ToUpper() == "X")
+        {
+            Console.WriteLine("Order creation cancelled.");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(rID) && restaurantsObj.ContainsKey(rID))
+            break;
+
+        Console.WriteLine("Invalid restaurant ID.");
     }
-    Console.Write("Enter Delivery Time (hh:mm): ");
-    if (!DateTime.TryParse(Console.ReadLine(), out DateTime dTime))
+
+    DateTime dDate;
+    while (true)
     {
+        Console.Write("Enter Delivery Date (dd/mm/yyyy) [X to Cancel]: ");
+        string input = Console.ReadLine();
+
+        if (input.ToUpper() == "X")
+        {
+            Console.WriteLine("Order creation cancelled.");
+            return;
+        }
+
+        if (DateTime.TryParse(input, out dDate))
+            break;
+
+        Console.WriteLine("Invalid date format.");
+    }
+
+    DateTime dTime;
+    while (true)
+    {
+        Console.Write("Enter Delivery Time (hh:mm) [X to Cancel]: ");
+        string input = Console.ReadLine();
+
+        if (input.ToUpper() == "X")
+        {
+            Console.WriteLine("Order creation cancelled.");
+            return;
+        }
+
+        if (DateTime.TryParse(input, out dTime))
+            break;
+
         Console.WriteLine("Invalid delivery time format.");
-        return;
     }
-    Console.Write("Enter Delivery Address: ");
-    string dAddress = Console.ReadLine();
-    if (string.IsNullOrWhiteSpace(dAddress))
+
+    string dAddress;
+    while (true)
     {
+        Console.Write("Enter Delivery Address [X to Cancel]: ");
+        dAddress = Console.ReadLine();
+
+        if (dAddress.ToUpper() == "X")
+        {
+            Console.WriteLine("Order creation cancelled.");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(dAddress))
+            break;
+
         Console.WriteLine("Delivery address cannot be empty.");
-        return;
     }
+
     DateTime deliveryDateTime = dDate.Date + dTime.TimeOfDay;
 
     Console.WriteLine("Available Food Items:");
@@ -303,71 +365,112 @@ void CreateNewOrder()
     bool itemAdded = false;
 
     while (true)
-     {
-         Console.Write("Enter item number (0 to finish) : ");
+    {
+        Console.Write("Enter item number (0 to finish, X to cancel) : ");
         if (!int.TryParse(Console.ReadLine(), out int choice))
         {
             Console.WriteLine("Invalid item number.");
             continue;
         }
         if (choice == 0)
-         {
+        {
             break;
-         }
+        }
         if (choice < 1 || choice > res.Menu[0].FoodItems.Count)
         {
             Console.WriteLine("Item number out of range.");
             continue;
         }
         FoodItem selectedItem = res.Menu[0].FoodItems[choice - 1];
-         Console.Write("Enter quantity: ");
+
+        Console.Write("Enter quantity: ");
         if (!int.TryParse(Console.ReadLine(), out int quantity) || quantity <= 0)
         {
             Console.WriteLine("Quantity must be a positive number.");
             continue;
         }
-        OrderedFoodItem orderedItem = new OrderedFoodItem(
-         selectedItem.ItemName,
-         selectedItem.ItemDesc,
-         selectedItem.ItemPrice,
-         quantity
-         );
-        newOrder.AddOrderedFoodItem(orderedItem);
-        itemAdded = true;
+
+        Console.Write("Add special request? [Y/N] : ");
+        string specialReqChoice = Console.ReadLine().ToUpper();
+
+        if (specialReqChoice == "Y")
+        {
+            Console.Write("Enter special request: ");
+            string specialRequest = Console.ReadLine();
+            OrderedFoodItem orderedItem = new OrderedFoodItem(
+                selectedItem.ItemName,
+                selectedItem.ItemDesc,
+                selectedItem.ItemPrice,
+                specialRequest,
+                quantity
+            );
+            newOrder.AddOrderedFoodItem(orderedItem);
+            itemAdded = true;
+            continue;
+        }
+        if (specialReqChoice == "N")
+        {
+            OrderedFoodItem orderedItem = new OrderedFoodItem(
+                selectedItem.ItemName,
+                selectedItem.ItemDesc,
+                selectedItem.ItemPrice,
+                quantity
+            );
+            newOrder.AddOrderedFoodItem(orderedItem);
+            itemAdded = true;
+            continue;
+        }
+        if (specialReqChoice != "Y" && specialReqChoice != "N")
+        {
+            Console.WriteLine("Invalid choice.");
+            continue;
+        }
     }
+
     if (!itemAdded)
     {
         Console.WriteLine("Order must contain at least one item.");
         return;
     }
-    Console.Write("Add special request? [Y/N] : ");
-    string specialReqChoice = Console.ReadLine().ToUpper();
-
-    if (specialReqChoice == "Y")
-    {
-        Console.Write("Enter special request: ");
-        string request = Console.ReadLine();
-    }
 
     double totalPayment = newOrder.CalculateOrderTotal();
     Console.WriteLine($"Order Total: ${(totalPayment - 5):F2} + $5.00 (delivery) = ${totalPayment:F2}");
-    Console.Write("Proceed to payment? [Y/N] : ");
-    string paymentChoice = Console.ReadLine().ToUpper();
-    if (paymentChoice != "Y" && paymentChoice != "N")
+    string paymentChoice;
+    while (true)
     {
-        Console.WriteLine("Invalid choice.");
-        return;
+        Console.Write("Proceed to payment? [Y/N/X]: ");
+        paymentChoice = Console.ReadLine().ToUpper();
+
+        if (paymentChoice == "X")
+        {
+            Console.WriteLine("Order creation cancelled.");
+            return;
+        }
+
+        if (paymentChoice == "Y" || paymentChoice == "N")
+            break;
+
+        Console.WriteLine("Invalid choice. Please enter Y, N or X.");
     }
-    if (paymentChoice == "N")
-        return;
-    Console.WriteLine("Payment method:");
-    Console.Write("[CC] Credit Card / [PP] PayPal / [CD] Cash on Delivery: ");
-    string paymentMethod = Console.ReadLine().ToUpper();
-    if (paymentMethod != "CC" && paymentMethod != "PP" && paymentMethod != "CD")
+
+    string paymentMethod;
+    while (true)
     {
-        Console.WriteLine("Invalid payment method.");
-        return;
+        Console.Write("[CC] Credit Card / [PP] PayPal / [CD] Cash on Delivery / [X] Cancel: ");
+        paymentMethod = Console.ReadLine().ToUpper();
+
+        if (paymentMethod == "X")
+        {
+            Console.WriteLine("Order creation cancelled.");
+            return;
+        }
+
+        if (paymentMethod == "CC" || paymentMethod == "PP" || paymentMethod == "CD")
+            break;
+
+        Console.WriteLine("Invalid payment method. Try again.");
     }
+
     newOrder.OrderPaymentMethod = paymentMethod;
     newOrder.OrderPaid = true;
 
@@ -557,13 +660,22 @@ void ModifyOrder()
     Console.WriteLine("Modify Order");
     Console.WriteLine("============");
 
-    Console.Write("Enter Customer Email: ");
-    string cEmail = Console.ReadLine();
-
-    if (!customerObj.ContainsKey(cEmail))
+    string cEmail;
+    while (true)
     {
+        Console.Write("Enter Customer Email [X to Cancel]: ");
+        cEmail = Console.ReadLine();
+
+        if (cEmail.ToUpper() == "X")
+        {
+            Console.WriteLine("Modification cancelled.");
+            return;
+        }
+
+        if (customerObj.ContainsKey(cEmail))
+            break;
+
         Console.WriteLine("Customer email not found.");
-        return;
     }
 
     Console.WriteLine("Pending Orders:");
@@ -584,11 +696,22 @@ void ModifyOrder()
         return;
     }
 
-    Console.Write("Enter Order ID: ");
-    if (!int.TryParse(Console.ReadLine(), out int oID) || !pendingOrders.Contains(oID))
+    int oID;
+    while (true)
     {
+        Console.Write("Enter Order ID [X to Cancel]: ");
+        string input = Console.ReadLine();
+
+        if (input.ToUpper() == "X")
+        {
+            Console.WriteLine("Modification cancelled.");
+            return;
+        }
+
+        if (int.TryParse(input, out oID) && pendingOrders.Contains(oID))
+            break;
+
         Console.WriteLine("Invalid Order ID.");
-        return;
     }
 
     Order order = orderObj[oID];
@@ -602,57 +725,112 @@ void ModifyOrder()
     Console.WriteLine($"Address:\n{order.DeliveryAddress}");
     Console.WriteLine($"Delivery Date/Time:\n{order.DeliveryDateTime:dd/MM/yyyy, HH:mm}");
 
-    Console.Write("\nModify: [1] Items [2] Address [3] Delivery Time: ");
-    if (!int.TryParse(Console.ReadLine(), out int modifyChoice) || modifyChoice < 1 || modifyChoice > 3)
+    int modifyChoice;
+    while (true)
     {
+        Console.Write("\nModify: [1] Items [2] Address [3] Delivery Time [X to Cancel]: ");
+        string input = Console.ReadLine();
+
+        if (input.ToUpper() == "X")
+        {
+            Console.WriteLine("Modification cancelled.");
+            return;
+        }
+
+        if (int.TryParse(input, out modifyChoice) && modifyChoice >= 1 && modifyChoice <= 3)
+            break;
+
         Console.WriteLine("Invalid modification option.");
-        return;
     }
 
     double oldTotal = order.OrderTotal;
 
     if (modifyChoice == 1)
     {
-        Console.Write("Enter item number to modify: ");
-        if (!int.TryParse(Console.ReadLine(), out int itemNo) ||
-            itemNo < 1 || itemNo > order.OrderedFoodItem.Count)
+        int itemNo;
+        while (true)
         {
+            Console.Write("Enter item number to modify [X to Cancel]: ");
+            string input = Console.ReadLine();
+
+            if (input.ToUpper() == "X")
+            {
+                Console.WriteLine("Modification cancelled.");
+                return;
+            }
+
+            if (int.TryParse(input, out itemNo) &&
+                itemNo >= 1 && itemNo <= order.OrderedFoodItem.Count)
+                break;
+
             Console.WriteLine("Invalid item number.");
-            return;
         }
 
-        Console.Write("Enter new quantity: ");
-        if (!int.TryParse(Console.ReadLine(), out int newQty) || newQty <= 0)
+        int newQty;
+        while (true)
         {
-            Console.WriteLine("Quantity must be a positive number.");
-            return;
-        }
+            Console.Write("Enter new quantity [X to Cancel]: ");
+            string input = Console.ReadLine();
 
+            if (input.ToUpper() == "X")
+            {
+                Console.WriteLine("Modification cancelled.");
+                return;
+            }
+
+            if (int.TryParse(input, out newQty) && newQty > 0)
+                break;
+
+            Console.WriteLine("Quantity must be a positive number.");
+        }
         order.OrderedFoodItem[itemNo - 1].QtyOrdered = newQty;
+        Console.WriteLine($"Order {order.OrderID} updated. {order.OrderedFoodItem[itemNo - 1].ItemName} quantity changed to {newQty}");
     }
     else if (modifyChoice == 2)
     {
-        Console.Write("Enter new delivery address: ");
-        string newAddress = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(newAddress))
+        string newAddress;
+        while (true)
         {
+            Console.Write("Enter new delivery address [X to Cancel]: ");
+            newAddress = Console.ReadLine();
+
+            if (newAddress.ToUpper() == "X")
+            {
+                Console.WriteLine("Modification cancelled.");
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(newAddress))
+                break;
+
             Console.WriteLine("Delivery address cannot be empty.");
-            return;
         }
 
         order.DeliveryAddress = newAddress;
+        Console.WriteLine($"Order {order.OrderID} updated. New Delivery Address:\n{newAddress}");
     }
     else if (modifyChoice == 3)
     {
-        Console.Write("Enter new delivery time (hh:mm): ");
-        if (!DateTime.TryParse(Console.ReadLine(), out DateTime newTime))
+        DateTime newTime;
+        while (true)
         {
+            Console.Write("Enter new delivery time (hh:mm) [X to Cancel]: ");
+            string input = Console.ReadLine();
+
+            if (input.ToUpper() == "X")
+            {
+                Console.WriteLine("Modification cancelled.");
+                return;
+            }
+
+            if (DateTime.TryParse(input, out newTime))
+                break;
+
             Console.WriteLine("Invalid time format.");
-            return;
         }
 
         order.DeliveryDateTime = order.DeliveryDateTime.Date + newTime.TimeOfDay;
+        Console.WriteLine($"Order {order.OrderID} updated. New Delivery Time: {order.DeliveryDateTime:HH:mm}");
     }
 
     double newTotal = order.CalculateOrderTotal();
@@ -660,29 +838,48 @@ void ModifyOrder()
     if (newTotal > oldTotal)
     {
         Console.WriteLine($"Additional payment required: ${(newTotal - oldTotal):F2}");
-        Console.Write("Proceed to payment? [Y/N]: ");
 
-        if (Console.ReadLine().ToUpper() != "Y")
+        string payChoice;
+        while (true)
         {
-            order.OrderTotal = oldTotal;
-            Console.WriteLine("Payment cancelled. Changes reverted.");
-            return;
+            Console.Write("Proceed to payment? [Y/N/X]: ");
+            payChoice = Console.ReadLine().ToUpper();
+
+            if (payChoice == "X" || payChoice == "N")
+            {
+                order.OrderTotal = oldTotal;
+                Console.WriteLine("Payment cancelled. Changes reverted.");
+                return;
+            }
+
+            if (payChoice == "Y")
+                break;
+
+            Console.WriteLine("Invalid choice.");
         }
 
-        Console.Write("Payment method [CC/PP/CD]: ");
-        string method = Console.ReadLine().ToUpper();
-
-        if (method != "CC" && method != "PP" && method != "CD")
+        string method;
+        while (true)
         {
+            Console.Write("Payment method [CC/PP/CD/X]: ");
+            method = Console.ReadLine().ToUpper();
+
+            if (method == "X")
+            {
+                order.OrderTotal = oldTotal;
+                Console.WriteLine("Payment cancelled. Changes reverted.");
+                return;
+            }
+
+            if (method == "CC" || method == "PP" || method == "CD")
+                break;
+
             Console.WriteLine("Invalid payment method.");
-            return;
         }
 
         order.OrderPaymentMethod = method;
         order.OrderPaid = true;
     }
-
-    Console.WriteLine("Order updated successfully!");
 }
 void DeleteExistingOrder()
 {
