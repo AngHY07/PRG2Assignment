@@ -67,6 +67,7 @@ namespace S10273989D_PRG2Assignment
                     Console.WriteLine($"   - {fi.ItemName}: {fi.ItemDesc} - ${fi.ItemPrice.ToString("0.00")}");
                 }
             }
+            Console.WriteLine();
         }
 
         public void AddMenu(Menu menu)

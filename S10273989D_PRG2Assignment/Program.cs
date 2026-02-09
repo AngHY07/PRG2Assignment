@@ -19,6 +19,7 @@ using System.Security.Cryptography;
 using System.Xml.Serialization;
 using System.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System;
 
 Stack<Order> Archive = new Stack<Order>();
 
@@ -232,7 +233,7 @@ void ListAllOrder()
     {
 
         Order order = orderObj[orderid];
-        Console.WriteLine($"{order.OrderID,-9}  {order.Customer.CustomerName,-13}  {order.Restaurant.RestaurantName,-15}  {order.DeliveryDateTime.ToString("dd/MM/yyyy H:mm"),-18}  {$"${order.OrderTotal.ToString("F2")}",-7}  {order.OrderStatus,-9}");
+        Console.WriteLine($"{order.OrderID,-9}  {order.Customer.CustomerName,-13}  {order.Restaurant.RestaurantName,-15}  {order.DeliveryDateTime.ToString("dd'/'MM'/'yyyy H:mm"),-18}  {$"${order.OrderTotal.ToString("F2")}",-7}  {order.OrderStatus,-9}");
     }
 }
 
@@ -343,7 +344,7 @@ void CreateNewOrder()
 
     DateTime deliveryDateTime = dDate.Date + dTime.TimeOfDay;
 
-    Console.WriteLine("Available Food Items:");
+    Console.WriteLine("\nAvailable Food Items:");
     Restaurant res = restaurantsObj[rID];
     Order newOrder = new Order(
         customerObj[cEmail],
@@ -498,7 +499,7 @@ void CreateNewOrder()
         sw.WriteLine($"{newOrder.OrderID},{cEmail},{rID},{dDate:dd'/'MM'/'yyyy},{dTime:HH:mm},{dAddress},{formattedDateTime},{totalPayment},{newOrder.OrderStatus},\"{itemsLine}\"");
     }
 
-    Console.WriteLine($"Order {newOrder.OrderID} created successfully! Status: Pending");
+    Console.WriteLine($"\nOrder {newOrder.OrderID} created successfully! Status: Pending");
 }
 
 void ProcessOrder()
@@ -507,15 +508,26 @@ void ProcessOrder()
     int processCount = 0;
     Queue<Order> orderQueuePop = new Queue<Order>();
     bool quit = false;
+
     while (true)
     {
         try
         {
             Console.WriteLine("Process Order");
             Console.WriteLine("=============");
-            Console.Write("Enter Restaurant ID: ");
+            Console.Write("Enter Restaurant ID (X to Cancel): ");
             restaurantID = Console.ReadLine();
 
+            if (restaurantID.ToUpper() == "X")
+            {
+                Console.WriteLine("Order processing cancelled by user.");
+                return;
+            }
+            if (!restaurantsObj.ContainsKey(restaurantID))
+            {
+                Console.WriteLine("Restaurant ID not found. Please retry!\n");
+                continue;
+            }
             if (restaurantsObj[restaurantID].Order.Count == 0)
             {
                 Console.WriteLine("No orders to process for this restaurant.\n");
@@ -540,8 +552,8 @@ void ProcessOrder()
                     Console.WriteLine($"{count}. {ofi.ItemName} - {ofi.QtyOrdered}");
                     count += 1;
                 }
-                Console.WriteLine($"Delivery date/time: {ord.DeliveryDateTime.ToString("dd/MM/yyyy HH:mm")}");
-                Console.WriteLine($"Total Amount: ${ord.OrderTotal}");
+                Console.WriteLine($"Delivery date/time: {ord.DeliveryDateTime.ToString("dd'/'MM'/'yyyy HH:mm")}");
+                Console.WriteLine($"Total Amount: ${ord.OrderTotal.ToString("F2")}");
                 Console.WriteLine($"Order Status: {ord.OrderStatus}\n");
                 while (true)
                 {
@@ -726,7 +738,7 @@ void ModifyOrder()
 
     Order order = orderObj[oID];
 
-    Console.WriteLine("\nOrder Items:");
+    Console.WriteLine("Order Items:");
     for (int i = 0; i < order.OrderedFoodItem.Count; i++)
     {
         Console.WriteLine($"{i + 1}. {order.OrderedFoodItem[i].ItemName} - {order.OrderedFoodItem[i].QtyOrdered}");
@@ -794,7 +806,7 @@ void ModifyOrder()
             Console.WriteLine("Quantity must be a positive number.");
         }
         order.OrderedFoodItem[itemNo - 1].QtyOrdered = newQty;
-        Console.WriteLine($"Order {order.OrderID} updated. {order.OrderedFoodItem[itemNo - 1].ItemName} quantity changed to {newQty}");
+        Console.WriteLine($"\nOrder {order.OrderID} updated. {order.OrderedFoodItem[itemNo - 1].ItemName} quantity changed to {newQty}");
     }
     else if (modifyChoice == 2)
     {
@@ -817,7 +829,7 @@ void ModifyOrder()
         }
 
         order.DeliveryAddress = newAddress;
-        Console.WriteLine($"Order {order.OrderID} updated. New Delivery Address:\n{newAddress}");
+        Console.WriteLine($"\nOrder {order.OrderID} updated. New Delivery Address:\n{newAddress}");
     }
     else if (modifyChoice == 3)
     {
@@ -840,7 +852,7 @@ void ModifyOrder()
         }
 
         order.DeliveryDateTime = order.DeliveryDateTime.Date + newTime.TimeOfDay;
-        Console.WriteLine($"Order {order.OrderID} updated. New Delivery Time: {order.DeliveryDateTime:HH:mm}");
+        Console.WriteLine($"\nOrder {order.OrderID} updated. New Delivery Time: {order.DeliveryDateTime:HH:mm}");
     }
 
     double newTotal = order.CalculateOrderTotal();
@@ -906,8 +918,15 @@ void DeleteExistingOrder()
         {
             Console.WriteLine("\nDelete Order");
             Console.WriteLine("=============");
-            Console.Write("Enter Customer Email: ");
+            Console.Write("Enter Customer Email (X to Cancel): ");
             cEmail = Console.ReadLine();
+
+            if (cEmail.ToUpper() == "X")
+            {
+                Console.WriteLine("Order deletion cancelled by user.");
+                return;
+            }
+
             Console.WriteLine("Pending Orders:");
 
 
@@ -968,10 +987,10 @@ void DeleteExistingOrder()
 
             count += 1;
         }
-        Console.WriteLine($"Delivery date/time: {orderObj[oID].DeliveryDateTime.ToString("dd/MM/yyyy  HH:mm")}");
-        Console.WriteLine($"Total Amount: ${orderObj[oID].OrderTotal}");
+        Console.WriteLine($"Delivery date/time: {orderObj[oID].DeliveryDateTime:dd\\/MM\\/yyyy HH:mm}");
+        Console.WriteLine($"Total Amount: ${orderObj[oID].OrderTotal:F2}");
         Console.WriteLine($"Order Status: {orderObj[oID].OrderStatus}");
-                
+
 
         while (true)
         {
@@ -1114,14 +1133,14 @@ void DisplayTotalOrderAmount()
         {
             if (ord.Restaurant.RestaurantId == rest.RestaurantId)
             {
-                if (ord.OrderStatus == "Delivered")
-                {
-                    restaurantOrderTotal += (ord.OrderTotal - 5);
-                }
-                else if (ord.OrderStatus == "Refunded")
-                {
-                    restaurantRefundTotal += ord.OrderTotal;
-                }
+                restaurantOrderTotal += ord.OrderTotal;
+            }
+        }
+        foreach (Order archivedOrder in Archive)
+        {
+            if (archivedOrder.Restaurant.RestaurantId == rest.RestaurantId)
+            {
+                restaurantRefundTotal += archivedOrder.OrderTotal;
             }
         }
 
@@ -1132,12 +1151,12 @@ void DisplayTotalOrderAmount()
         grandTotalOrders += restaurantOrderTotal;
         grandTotalRefunds += restaurantRefundTotal;
     }
-
     Console.WriteLine("\n=========================");
     Console.WriteLine($"Overall Total Orders: ${grandTotalOrders:F2}");
     Console.WriteLine($"Overall Total Refunds: ${grandTotalRefunds:F2}");
     Console.WriteLine($"Final Amount Earned by Gruberoo: ${(grandTotalOrders - grandTotalRefunds):F2}");
 }
+
 void MainMenu()
 {
     Console.WriteLine("\n===== Gruberoo Food Delivery System =====");
@@ -1244,7 +1263,3 @@ while(true)
     }
     
 }    
-
-
-
-
