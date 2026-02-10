@@ -30,6 +30,8 @@ namespace S10273989D_PRG2Assignment
 
         public List<SpecialOffer> SpecialOffer { get; set; }
 
+        public List<SpecialOffer> EnableOffers { get; set; }
+
         public Restaurant(string restaurantId, string restaurantName, string restaurantEmail)
         {
             this.RestaurantId = restaurantId;
@@ -39,6 +41,7 @@ namespace S10273989D_PRG2Assignment
             Order = new Queue<Order>();
             RefundStack = new Stack<Order>();
             SpecialOffer = new List<SpecialOffer>();
+            EnableOffers = new List<SpecialOffer>();
         }   
 
         public void DisplayOrders()

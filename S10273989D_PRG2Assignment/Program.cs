@@ -21,6 +21,8 @@ using System.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System;
 
+
+
 Stack<Order> Archive = new Stack<Order>();
 
 Dictionary<string, Restaurant> restaurantsObj = new Dictionary<string, Restaurant>();
@@ -32,7 +34,7 @@ Dictionary<string, Customer> customerObj = new Dictionary<string, Customer>();
 Dictionary<int, Order> orderObj = new Dictionary<int, Order>();
 
 Dictionary<string, Menu> menuObj = new Dictionary<string, Menu>();
-
+Dictionary <string,SpecialOffer>  specialOfferObj = new Dictionary<string, SpecialOffer>();
 void RestaurantInit()
 {
     using (StreamReader sr = new StreamReader("restaurants.csv"))
@@ -222,6 +224,77 @@ void OrderInit()
     Console.WriteLine($"{orderCount} orders loaded!");
 }
 
+void OfferFileInit()
+{
+    using(StreamReader sr = new StreamReader("orderwithoffer.csv"))
+    {
+        while(true)
+        {
+            string line = sr.ReadLine();
+
+            if (line == null)
+            {
+                break;
+            }
+
+            string[] offerinfo = line.Split(',');
+
+            Order ord = orderObj[int.Parse(offerinfo[0])];
+
+            for (int i = 1; i < offerinfo.Length; i++)
+            {
+                ord.SpecialOffer.Add(specialOfferObj[offerinfo[i]]);
+            }
+        }
+    }
+}
+
+void SpecialOfferInit()
+{
+    using (StreamReader sr = new StreamReader("specialoffers.csv"))
+    {
+        string title = sr.ReadLine();
+
+
+        while (true)
+        {
+            string line = sr.ReadLine();
+
+            if (line == null)
+            {
+                break;
+            }
+
+            string[] specialOfferInfo = line.Split(',');
+
+            string restaurantName = specialOfferInfo[0];
+            string offerCode = specialOfferInfo[1];
+            string description = specialOfferInfo[2];
+            double discount = 0;
+             
+            if (specialOfferInfo[3] == "-")
+            {
+                discount = 0;
+            }
+            else
+            {
+                discount = double.Parse(specialOfferInfo[3]);
+            }
+
+            specialOfferObj[offerCode] = new SpecialOffer(offerCode, description, discount / 100);
+
+            foreach (string resId in restaurantsObj.Keys)
+            {
+                if (restaurantsObj[resId].RestaurantName == restaurantName)
+                {
+                    Restaurant res = restaurantsObj[resId];
+
+                    res.SpecialOffer.Add(specialOfferObj[offerCode]);
+                }
+            }
+        }
+    }
+}
 void ListAllOrder()
 {
     Console.WriteLine("All Orders");
@@ -343,7 +416,14 @@ void CreateNewOrder()
     }
 
     DateTime deliveryDateTime = dDate.Date + dTime.TimeOfDay;
-
+    if (restaurantsObj[rID].EnableOffers.Count > 0)
+    {
+        Console.WriteLine("\nAvailable Special Offers:");
+        foreach (SpecialOffer offer in restaurantsObj[rID].EnableOffers)
+        {
+            Console.WriteLine($"Code: {offer.OfferCode} - {offer.OfferDesc}");
+        }
+    }
     Console.WriteLine("\nAvailable Food Items:");
     Restaurant res = restaurantsObj[rID];
     Order newOrder = new Order(
@@ -357,6 +437,8 @@ void CreateNewOrder()
         0,
         dAddress
     );
+
+
     for (int i = 0; i < res.Menu[0].FoodItems.Count; i++)
         {
             FoodItem fi = res.Menu[0].FoodItems[i];
@@ -367,8 +449,8 @@ void CreateNewOrder()
 
     while (true)
     {
-        
-        Console.Write("Enter item number (0 to finish, X to cancel) : ");
+
+        Console.Write("Enter item number (0 to finish) : ");
         if (!int.TryParse(Console.ReadLine(), out int choice))
         {
             Console.WriteLine("Invalid item number.");
@@ -391,9 +473,19 @@ void CreateNewOrder()
             Console.WriteLine("Quantity must be a positive number.");
             continue;
         }
+        var bogo = specialOfferObj["BOGO"];
+
+        if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == bogo.OfferCode))
+        {
+
+
+            Console.WriteLine($"\nBOGO (Buy one free one) offer applied! You get one free for each item bought! Item: {selectedItem.ItemName} Current Quantity: {quantity * 2}");
+            newOrder.SpecialOffer.Add(bogo);
+        }
+
         while (true)
         {
-            
+
             Console.Write("Add special request? [Y/N] : ");
             string specialReqChoice = Console.ReadLine().ToUpper();
 
@@ -435,14 +527,68 @@ void CreateNewOrder()
     }
 
 
+
     if (!itemAdded)
     {
         Console.WriteLine("Order must contain at least one item.");
         return;
     }
 
-    double totalPayment = newOrder.CalculateOrderTotal();
-    Console.WriteLine($"\nOrder Total: ${(totalPayment - 5):F2} + $5.00 (delivery) = ${totalPayment:F2}");
+    bool applicableEarl = true;
+
+    foreach(Order or in customerObj[cEmail].Orders)
+    {
+        if (or.Restaurant.RestaurantId == rID)
+        {
+            applicableEarl = false;
+        }
+    }
+
+    newOrder.ApplicableEarl = applicableEarl;
+
+    double totalPayment = newOrder.CalculateOrderTotal(restaurantsObj[rID].EnableOffers,specialOfferObj);
+    
+    var deli = specialOfferObj["DELI"];
+    var fest = specialOfferObj["FEST"];
+    var earl = specialOfferObj["EARL"];
+    var week = specialOfferObj["WEEK"];
+    var phol = specialOfferObj["PHOL"];
+
+    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == fest.OfferCode))
+    {
+        Console.WriteLine("FEST (Festive Season Discount) offer applied! 8 percent discount applied!");
+        newOrder.SpecialOffer.Add(fest);
+    }
+
+    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == earl.OfferCode) && applicableEarl)
+    {
+        Console.WriteLine("EARL (Early Bird) offer applied! 5 percent discount applied!");
+        newOrder.SpecialOffer.Add(earl);
+    }
+
+
+    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == week.OfferCode))
+    {
+        Console.WriteLine("WEEK (Weekday Discount) offer applied! 3 percent discount applied!");
+        newOrder.SpecialOffer.Add(week);
+    }
+
+    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == phol.OfferCode))
+    {
+        Console.WriteLine("PHOL (Public Holiday Discount) offer applied! 10 percent discount applied!");
+        newOrder.SpecialOffer.Add(phol);
+    }
+
+    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == deli.OfferCode) && newOrder.FreeDelivery)
+    {
+        Console.WriteLine($"\nDELI (Free Delivery) offer applied! You get free delivery for this order!");
+        Console.WriteLine($"\nOrder Total: ${(totalPayment):F2} + $0 (No delivery fee) = ${totalPayment:F2}");
+        newOrder.SpecialOffer.Add(deli);
+    }
+    else
+    {
+        Console.WriteLine($"\nOrder Total: ${(totalPayment - 5):F2} + $5.00 (delivery) = ${totalPayment:F2}");
+    }
     string paymentChoice;
     while (true)
     {
@@ -729,11 +875,17 @@ void ModifyOrder()
             Console.WriteLine("Modification cancelled.");
             return;
         }
-
+        
         if (int.TryParse(input, out oID) && pendingOrders.Contains(oID))
             break;
 
         Console.WriteLine("Invalid Order ID.");
+    }
+
+    if (orderObj[oID].SpecialOffer.Count > 0)
+    {
+        Console.WriteLine("\nYou can't modify order that had special offer applied to it.");
+        return;
     }
 
     Order order = orderObj[oID];
@@ -789,24 +941,109 @@ void ModifyOrder()
         }
 
         int newQty;
+        
         while (true)
         {
             Console.Write("Enter new quantity [X to Cancel]: ");
             string input = Console.ReadLine();
 
+            
             if (input.ToUpper() == "X")
             {
                 Console.WriteLine("Modification cancelled.");
                 return;
             }
-
-            if (int.TryParse(input, out newQty) && newQty > 0)
+            else if (int.TryParse(input, out newQty) && newQty > 0)
                 break;
+            else if (newQty == order.OrderedFoodItem[itemNo -1].QtyOrdered)
+            {
+                Console.WriteLine("The quantity amount is the same. Retry!");
+            }
 
             Console.WriteLine("Quantity must be a positive number.");
         }
-        order.OrderedFoodItem[itemNo - 1].QtyOrdered = newQty;
-        Console.WriteLine($"\nOrder {order.OrderID} updated. {order.OrderedFoodItem[itemNo - 1].ItemName} quantity changed to {newQty}");
+
+        int oldQty = order.OrderedFoodItem[itemNo - 1].QtyOrdered;
+
+        if (newQty > order.OrderedFoodItem[itemNo - 1].QtyOrdered)
+        {
+            order.OrderedFoodItem[itemNo - 1].QtyOrdered = newQty;
+            double newTotal = order.CalculateOrderTotal(order.Restaurant.EnableOffers, specialOfferObj);
+            Console.WriteLine($"Additional payment required: ${(newTotal - oldTotal):F2}");
+
+            string payChoice;
+            while (true)
+            {
+                Console.Write("Proceed to payment? [Y/N/X]: ");
+                payChoice = Console.ReadLine().ToUpper();
+
+                if (payChoice == "X" || payChoice == "N")
+                {
+                    order.OrderTotal = oldTotal;
+                    Console.WriteLine("Payment cancelled. Changes reverted.");
+                    order.OrderedFoodItem[itemNo - 1].QtyOrdered = oldQty;
+                    order.CalculateOrderTotal(order.Restaurant.EnableOffers, specialOfferObj);
+                    return;
+                }
+
+                if (payChoice == "Y")
+                    break;
+
+                Console.WriteLine("Invalid choice.");
+            }
+
+            string method;
+            while (true)
+            {
+                Console.Write("Payment method [CC/PP/CD/X]: ");
+                method = Console.ReadLine().ToUpper();
+
+                if (method == "X")
+                {
+                    order.OrderTotal = oldTotal;
+                    Console.WriteLine("Payment cancelled. Changes reverted.");
+                    order.OrderedFoodItem[itemNo - 1].QtyOrdered = oldQty;
+                    order.CalculateOrderTotal(order.Restaurant.EnableOffers, specialOfferObj);
+                    return;
+                }
+
+                if (method == "CC" || method == "PP" || method == "CD")
+                    break;
+
+                Console.WriteLine("Invalid payment method.");
+            }
+            Console.WriteLine($"\nOrder {order.OrderID} updated. {order.OrderedFoodItem[itemNo - 1].ItemName} quantity changed to {newQty}");
+            order.OrderPaymentMethod = method;
+            order.OrderPaid = true;
+        }
+        else if (newQty < order.OrderedFoodItem[itemNo -1].QtyOrdered)
+        {
+
+
+            order.OrderedFoodItem[itemNo - 1].QtyOrdered = newQty;
+
+            order.CalculateOrderTotal();
+
+            Order refundobj = new Order(order.Customer, order.Restaurant, null, order.OrderID, order.OrderDateTime, order.OrderStatus, order.DeliveryDateTime, order.OrderTotal, order.DeliveryAddress);
+
+            OrderedFoodItem refundqty = new OrderedFoodItem(order.OrderedFoodItem[itemNo - 1].ItemName, order.OrderedFoodItem[itemNo - 1].ItemDesc, order.OrderedFoodItem[itemNo - 1].ItemPrice, order.OrderedFoodItem[itemNo - 1].QtyOrdered);
+
+            refundqty.QtyOrdered = oldQty - newQty;
+
+
+            refundobj.OrderedFoodItem.Add(refundqty);
+            refundobj.CalculateOrderTotal();
+            refundobj.OrderTotal = refundobj.OrderTotal - 5;
+            order.Restaurant.RefundStack.Push(refundobj);
+
+
+            Archive.Push(refundobj);
+            Console.WriteLine($"New Quantity of {order.OrderedFoodItem[itemNo - 1].ItemName}: {order.OrderedFoodItem[itemNo - 1].QtyOrdered}");
+            
+        }
+
+
+            
     }
     else if (modifyChoice == 2)
     {
@@ -855,53 +1092,9 @@ void ModifyOrder()
         Console.WriteLine($"\nOrder {order.OrderID} updated. New Delivery Time: {order.DeliveryDateTime:HH:mm}");
     }
 
-    double newTotal = order.CalculateOrderTotal();
+    
 
-    if (newTotal > oldTotal)
-    {
-        Console.WriteLine($"Additional payment required: ${(newTotal - oldTotal):F2}");
-
-        string payChoice;
-        while (true)
-        {
-            Console.Write("Proceed to payment? [Y/N/X]: ");
-            payChoice = Console.ReadLine().ToUpper();
-
-            if (payChoice == "X" || payChoice == "N")
-            {
-                order.OrderTotal = oldTotal;
-                Console.WriteLine("Payment cancelled. Changes reverted.");
-                return;
-            }
-
-            if (payChoice == "Y")
-                break;
-
-            Console.WriteLine("Invalid choice.");
-        }
-
-        string method;
-        while (true)
-        {
-            Console.Write("Payment method [CC/PP/CD/X]: ");
-            method = Console.ReadLine().ToUpper();
-
-            if (method == "X")
-            {
-                order.OrderTotal = oldTotal;
-                Console.WriteLine("Payment cancelled. Changes reverted.");
-                return;
-            }
-
-            if (method == "CC" || method == "PP" || method == "CD")
-                break;
-
-            Console.WriteLine("Invalid payment method.");
-        }
-
-        order.OrderPaymentMethod = method;
-        order.OrderPaid = true;
-    }
+    
 }
 void DeleteExistingOrder()
 {
@@ -1123,18 +1316,19 @@ void DisplayTotalOrderAmount()
 
     double grandTotalOrders = 0;
     double grandTotalRefunds = 0;
+    double gruberoEarnings = 0;
 
     foreach (Restaurant rest in restaurantsObj.Values)
     {
         double restaurantOrderTotal = 0;
         double restaurantRefundTotal = 0;
 
-        foreach (Order ord in orderObj.Values)
+        foreach (Order ord in rest.Order)
         {
-            if (ord.Restaurant.RestaurantId == rest.RestaurantId)
-            {
-                restaurantOrderTotal += ord.OrderTotal;
-            }
+            gruberoEarnings += (ord.OrderTotal * 0.3);
+
+            restaurantOrderTotal += ord.OrderTotal;
+            
         }
         foreach (Order archivedOrder in Archive)
         {
@@ -1154,9 +1348,211 @@ void DisplayTotalOrderAmount()
     Console.WriteLine("\n=========================");
     Console.WriteLine($"Overall Total Orders: ${grandTotalOrders:F2}");
     Console.WriteLine($"Overall Total Refunds: ${grandTotalRefunds:F2}");
-    Console.WriteLine($"Final Amount Earned by Gruberoo: ${(grandTotalOrders - grandTotalRefunds):F2}");
+    Console.WriteLine($"Final Amount Earned by Gruberoo (30% of each order): ${gruberoEarnings:F2}");
 }
 
+void EnablingSpecialOffer()
+{
+    List<string> resIDs = new List<string>();
+    Dictionary<int, SpecialOffer> offerDictRemove = new Dictionary<int, SpecialOffer>();
+    Dictionary<int, SpecialOffer> offerDictAdd = new Dictionary<int, SpecialOffer>();
+
+
+    foreach (Restaurant res in restaurantsObj.Values)
+    {
+        resIDs.Add(res.RestaurantId);
+    }
+
+
+    while (true)
+    {
+        int count = 1;
+        int c = 1;
+        int removeChoice;
+        Console.WriteLine("\n=======================================================================================================");
+        Console.WriteLine("                            Enable / Remove Special Offer for Restaurant");
+        Console.WriteLine("=======================================================================================================");
+
+        Console.Write("\nRestaurants ID [X to exit]: ");
+        string res = Console.ReadLine();
+        
+
+        if (res.ToUpper() == "X")
+        {
+            break;
+        }
+
+        if (!resIDs.Contains(res))
+        {
+            Console.WriteLine("Restaurant ID not found. Please retry!\n");
+            continue;
+        }
+
+        Console.WriteLine($"\n[OfferCodes of Restaurant {restaurantsObj[res].RestaurantName}, {restaurantsObj[res].RestaurantId}]");
+        foreach (SpecialOffer sp in restaurantsObj[res].SpecialOffer)
+        {
+            Console.WriteLine($"* {sp.OfferCode} - {sp.OfferDesc}");
+        }
+        Console.WriteLine();
+
+
+
+        while (true)
+        {
+
+
+            Console.WriteLine($"\n[Enabled OfferCodes ({restaurantsObj[res].RestaurantId})]");
+            if (restaurantsObj[res].EnableOffers.Count == 0)
+            {
+                Console.WriteLine("No enabled offers!");
+            }
+            foreach (SpecialOffer sp in restaurantsObj[res].EnableOffers)
+            {
+                Console.WriteLine($"* {sp.OfferCode} - {sp.OfferDesc}");
+            }
+
+            Console.WriteLine("\n===== Enable / Disable Offers =====");
+            Console.WriteLine("1. Remove Enabled Offers ");
+            Console.WriteLine("2. Enable Offers ");
+            Console.WriteLine("0. Exit ");
+            Console.Write("Enter your choice: ");
+            try
+            {
+                int choice = int.Parse(Console.ReadLine());
+                
+
+                if (choice == 0)
+                {
+                    break;
+                }
+                else if (choice == 1)
+                {
+                    if (restaurantsObj[res].EnableOffers.Count == 0)
+                    {
+                        Console.WriteLine("\nNo enabled offers to remove.\n");
+                        continue;
+                    }
+
+                    Console.WriteLine("\nSelect offer to remove:");
+                    foreach (SpecialOffer sp in restaurantsObj[res].EnableOffers)
+                    {
+                        offerDictRemove[count] = sp;
+
+                        Console.WriteLine($"[{count}] {sp.OfferCode} - {sp.OfferDesc}");
+                        count += 1;
+                    }
+                    while (true)
+                    {
+                        Console.Write("Enter the number of the offer to remove [0 : Exit]: ");
+                        try
+                        {
+                            removeChoice = int.Parse(Console.ReadLine());
+
+                            if (removeChoice < 0 || removeChoice > count)
+                            {
+                                Console.WriteLine("Invalid choice. Please retry!\n");
+                                continue;
+                            }
+                            else if (removeChoice == 0)
+                            {
+                                offerDictRemove.Clear();
+                                count = 1;
+                                break;
+                                
+                            }
+
+                            Console.WriteLine($"Offer {offerDictRemove[removeChoice].OfferCode} - {offerDictRemove[removeChoice].OfferDesc} has been removed!");
+                            restaurantsObj[res].EnableOffers.Remove(offerDictRemove[removeChoice]);
+                            offerDictRemove.Clear();
+                            count = 1;
+                            break;
+
+                        }
+                        catch (FormatException)
+                        {
+                            Console.WriteLine("Invalid input format. Please enter a valid number.\n");
+                            continue;
+                        }
+                    }
+                }
+                else if (choice == 2)
+                {
+                    if (restaurantsObj[res].SpecialOffer.Count == 0)
+                    {
+                        Console.WriteLine("No Offers to Enable!");
+                        continue;
+                    }
+                    int offerChoice;
+                    Console.WriteLine("\nSelect offer to add: ");
+                    foreach(SpecialOffer sp in restaurantsObj[res].SpecialOffer)
+                    {
+                        offerDictAdd[c] = sp;
+                        Console.WriteLine($"[{c}] {sp.OfferCode} - {sp.OfferDesc}");
+                        c += 1;
+                    }
+
+                    Console.WriteLine();
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.Write("Enter the number of the offer to add [0 : exit]: ");
+                            offerChoice = int.Parse(Console.ReadLine());
+
+                            if(offerChoice < 0  || offerChoice > c)
+                            {
+                                Console.WriteLine("Invalid choice. Please retry!\n");
+                                continue;
+                            }
+                            else if (offerChoice == 0)
+                            {
+                                break;
+                            }
+                            else if (restaurantsObj[res].EnableOffers.Contains(offerDictAdd[offerChoice]))
+                            {
+                                Console.WriteLine("Offer already enabled. Please retry!\n");
+                                continue;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        catch (FormatException)
+                        {
+                            Console.WriteLine("Invalid input format. Please enter a valid number.\n");
+                            continue;
+                        }
+                    }
+
+                    if (offerChoice == 0)
+                    {
+                        Console.WriteLine("Operation cancelled.\n");
+                        offerDictAdd.Clear();
+                        c = 1;
+                        continue;
+                    }
+
+                    Console.WriteLine($"Offer {offerDictAdd[offerChoice].OfferCode} - {offerDictAdd[offerChoice].OfferDesc} has been enabled!");
+                    restaurantsObj[res].EnableOffers.Add(offerDictAdd[offerChoice]);
+                    c = 1;
+                    offerDictAdd.Clear();
+
+                }
+                else
+                {
+                    Console.WriteLine("Invalid choice. Please retry!\n");
+                    continue;
+                }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Invalid Format. Enter a value. Please Retry!\n");
+                continue;
+            }
+        }
+    }
+}
 void MainMenu()
 {
     Console.WriteLine("\n===== Gruberoo Food Delivery System =====");
@@ -1168,98 +1564,133 @@ void MainMenu()
     Console.WriteLine("6. Delete an existing order");
     Console.WriteLine("7. Process all unprocessed orders ");
     Console.WriteLine("8. Display total order amount ");
+    Console.WriteLine("9. Enabling Special Offer (Restaurant)");
     
     Console.WriteLine("0. Exit");
     Console.Write("Enter your choice: ");
 }
 
+
+double gruberoEarnings = 0;
 Console.WriteLine("Welcome to the Gruberoo Food Delivery System");
 RestaurantInit();
 FoodItemInit();
 CustomerInit();
 OrderInit();
+SpecialOfferInit();
+OfferFileInit();
 
 
-while(true)
+while (true)
 {
+    int inputChoice;
+    MainMenu();
     try
     {
-        MainMenu();
-        int inputChoice = int.Parse(Console.ReadLine());
-
-        if (inputChoice == 0)
-        {
-            using (StreamWriter sw = new StreamWriter("queue.csv", false))
-            {
-                foreach(int ord in orderObj.Keys)
-                {
-                    Order ordObj = orderObj[ord];
-
-                    string itemsLine = string.Join("|", ordObj.OrderedFoodItem.Select(ofi => $"{ofi.ItemName},{ofi.QtyOrdered}"));
-                    sw.WriteLine($"{ordObj.OrderID},{ordObj.Customer.EmailAddress},{ordObj.Restaurant.RestaurantId},{ordObj.DeliveryDateTime:dd'/'MM'/'yyyy},{ordObj.DeliveryDateTime:HH:mm},{ordObj.DeliveryAddress},{ordObj.OrderDateTime},{ordObj.OrderTotal},{ordObj.OrderStatus},\"{itemsLine}\"");
-                    
-                }
-            }
-
-
-            using (StreamWriter sw = new StreamWriter("stack.csv", false))
-            {
-                foreach (string resID in restaurantsObj.Keys)
-                {
-                    Restaurant resObj = restaurantsObj[resID];
-                    foreach (Order ord in resObj.RefundStack)
-                    {
-                        string itemsLine = string.Join("|", ord.OrderedFoodItem.Select(ofi => $"{ofi.ItemName},{ofi.QtyOrdered}"));
-                        sw.WriteLine($"{ord.OrderID},{ord.Customer.EmailAddress},{ord.Restaurant.RestaurantId},{ord.DeliveryDateTime:dd'/'MM'/'yyyy},{ord.DeliveryDateTime:HH:mm},{ord.DeliveryAddress},{ord.OrderDateTime},{ord.OrderTotal},{ord.OrderStatus},\"{itemsLine}\"");
-                    }
-                }
-            }   
-
-            break;
-        }
-        else if (inputChoice == 1)
-        {
-            ListAllRestaurantsAndMenuItems();
-        }
-        else if (inputChoice == 2)
-        {
-            ListAllOrder();
-        }
-        else if (inputChoice == 3)
-        {
-            CreateNewOrder();
-        }
-        else if (inputChoice == 4)
-        {
-            ProcessOrder();
-        }
-        else if (inputChoice ==5)
-        {
-            ModifyOrder();
-        }
-        else if (inputChoice == 6)
-        {
-            DeleteExistingOrder();
-        }
-        else if (inputChoice == 7)
-        {
-
-            BulkProcessUnprocessedOrders();
-        }
-        else if (inputChoice == 8)
-        {
-
-            DisplayTotalOrderAmount();
-        }
-        else
-        {
-            Console.WriteLine("Invalid Input Choice!");
-        }
+        inputChoice = int.Parse(Console.ReadLine());
     }
-    catch(FormatException)
+    catch (FormatException)
     {
-        Console.WriteLine("Invalid input format. Please enter an integer choice.");
+        Console.WriteLine("Invalid Input Choice! Please enter a integer.");
         continue;
     }
+
+    if (inputChoice == 0)
+    {
+        using (StreamWriter sw = new StreamWriter("queue.csv", false))
+        {
+            foreach(int ord in orderObj.Keys)
+            {
+                Order ordObj = orderObj[ord];
+
+                string itemsLine = string.Join("|", ordObj.OrderedFoodItem.Select(ofi => $"{ofi.ItemName},{ofi.QtyOrdered}"));
+                sw.WriteLine($"{ordObj.OrderID},{ordObj.Customer.EmailAddress},{ordObj.Restaurant.RestaurantId},{ordObj.DeliveryDateTime:dd'/'MM'/'yyyy},{ordObj.DeliveryDateTime:HH:mm},{ordObj.DeliveryAddress},{ordObj.OrderDateTime},{ordObj.OrderTotal},{ordObj.OrderStatus},\"{itemsLine}\"");
+                    
+            }
+        }   
+
+
+        using (StreamWriter sw = new StreamWriter("stack.csv", false))
+        {
+            foreach (string resID in restaurantsObj.Keys)
+            {
+                Restaurant resObj = restaurantsObj[resID];
+                foreach (Order ord in resObj.RefundStack)
+                {
+                    string itemsLine = string.Join("|", ord.OrderedFoodItem.Select(ofi => $"{ofi.ItemName},{ofi.QtyOrdered}"));
+                    sw.WriteLine($"{ord.OrderID},{ord.Customer.EmailAddress},{ord.Restaurant.RestaurantId},{ord.DeliveryDateTime:dd'/'MM'/'yyyy},{ord.DeliveryDateTime:HH:mm},{ord.DeliveryAddress},{ord.OrderDateTime},{ord.OrderTotal},{ord.OrderStatus},\"{itemsLine}\"");
+                }
+            }
+        }
+
+        //Bonus
+        using(StreamWriter sw = new StreamWriter("orderwithoffer.csv",false))
+        {
+            foreach(int ord in orderObj.Keys)
+            {
+                if (orderObj[ord].SpecialOffer.Count >0)
+                {
+                    List<string> codes = new List<string>();
+
+                    foreach(SpecialOffer specialoffer in  orderObj[ord].SpecialOffer)
+                    {
+                        codes.Add(specialoffer.OfferCode);
+                    }
+
+                    sw.Write($"{orderObj[ord].OrderID}");
+                    foreach(string code in codes)
+                    {
+                        sw.Write($",{code}");
+                    }
+                    sw.WriteLine();
+                }
+            }
+        }
+
+        break;
+    }
+    else if (inputChoice == 1)
+    {
+        ListAllRestaurantsAndMenuItems();
+    }
+    else if (inputChoice == 2)
+    {
+        ListAllOrder();
+    }
+    else if (inputChoice == 3)
+    {
+        CreateNewOrder();
+    }
+    else if (inputChoice == 4)
+    {
+        ProcessOrder();
+    }
+    else if (inputChoice ==5)
+    {
+        ModifyOrder();
+    }
+    else if (inputChoice == 6)
+    {
+        DeleteExistingOrder();
+    }
+    else if (inputChoice == 7)
+    {
+
+        BulkProcessUnprocessedOrders();
+    }
+    else if (inputChoice == 8)
+    {
+
+        DisplayTotalOrderAmount();
+    }
+    else if (inputChoice == 9)
+    {
+        EnablingSpecialOffer();
+    }
+    else
+    {
+        Console.WriteLine("Invalid Input Choice!");
+    }
+  
     
 }    

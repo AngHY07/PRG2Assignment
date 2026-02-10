@@ -29,10 +29,26 @@ namespace S10273989D_PRG2Assignment
             this.QtyOrdered = qtyordered;
         }
 
+        public double CalculateSubtotal(List<SpecialOffer> sp, Dictionary<string,SpecialOffer>spDict)
+        {
+            SpecialOffer bogo = spDict["BOGO"];
+
+            if (sp.Any(o => o.OfferCode == bogo.OfferCode))
+            {
+                QtyOrdered = QtyOrdered * 2;
+                SubTotal = ItemPrice * (QtyOrdered/2);
+            }
+            else
+            {
+                SubTotal = ItemPrice * QtyOrdered;
+            }
+
+
+            return SubTotal;
+        }
+
         public double CalculateSubtotal()
         {
-            
-
             SubTotal = ItemPrice * QtyOrdered;
 
             return SubTotal;
