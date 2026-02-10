@@ -543,8 +543,20 @@ void CreateNewOrder()
             applicableEarl = false;
         }
     }
-
     newOrder.ApplicableEarl = applicableEarl;
+
+
+    DayOfWeek dayofWeek = (DateTime.Now).DayOfWeek;
+
+    bool weekday = true;
+
+    if (dayofWeek == DayOfWeek.Saturday || dayofWeek == DayOfWeek.Sunday)
+    {
+        weekday = false;
+    }
+
+    newOrder.WeekDay = weekday;
+        
 
     double totalPayment = newOrder.CalculateOrderTotal(restaurantsObj[rID].EnableOffers,specialOfferObj);
     
@@ -554,10 +566,12 @@ void CreateNewOrder()
     var week = specialOfferObj["WEEK"];
     var phol = specialOfferObj["PHOL"];
 
-    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == fest.OfferCode))
+
+
+    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == week.OfferCode) &&  weekday)
     {
-        Console.WriteLine("FEST (Festive Season Discount) offer applied! 8 percent discount applied!");
-        newOrder.SpecialOffer.Add(fest);
+        Console.WriteLine("WEEK (Weekday Discount) offer applied! 3 percent discount applied!");
+        newOrder.SpecialOffer.Add(week);
     }
 
     if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == earl.OfferCode) && applicableEarl)
@@ -566,12 +580,12 @@ void CreateNewOrder()
         newOrder.SpecialOffer.Add(earl);
     }
 
-
-    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == week.OfferCode))
+    if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == fest.OfferCode))
     {
-        Console.WriteLine("WEEK (Weekday Discount) offer applied! 3 percent discount applied!");
-        newOrder.SpecialOffer.Add(week);
+        Console.WriteLine("FEST (Festive Season Discount) offer applied! 8 percent discount applied!");
+        newOrder.SpecialOffer.Add(fest);
     }
+
 
     if (restaurantsObj[rID].EnableOffers.Any(o => o.OfferCode == phol.OfferCode))
     {

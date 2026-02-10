@@ -35,6 +35,7 @@ namespace S10273989D_PRG2Assignment
 
         public bool ApplicableEarl { get; set; }
 
+        public bool WeekDay { get; set; }
         public Customer Customer { get; set; }
 
         public Restaurant Restaurant { get; set; }
@@ -77,7 +78,7 @@ namespace S10273989D_PRG2Assignment
 
             OrderTotal = total;
 
-            if(sp.Any(o => o.OfferCode == week.OfferCode))
+            if(sp.Any(o => o.OfferCode == week.OfferCode) && WeekDay)
             {
                 OrderTotal = OrderTotal * (1 - week.Discount);
             }
