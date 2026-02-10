@@ -775,7 +775,7 @@ void ProcessOrder()
                     {
                         if (ord.OrderStatus != "Preparing")
                         {
-                            Console.WriteLine("\nOrder Status is not Preparing! Can't Deiver!\n");
+                            Console.WriteLine("\nOrder Status is not Preparing! Can't Deliver!\n");
                             continue;
                         }
                         ord.OrderStatus = "Delivered";
@@ -897,7 +897,7 @@ void ModifyOrder()
     }
 
     Console.WriteLine($"Address:\n{order.DeliveryAddress}");
-    Console.WriteLine($"Delivery Date/Time:\n{order.DeliveryDateTime:dd/MM/yyyy, HH:mm}");
+    Console.WriteLine($"Delivery Date/Time:\n{order.DeliveryDateTime:dd'/'MM'/'yyyy, HH:mm}");
 
     int modifyChoice;
     while (true)
@@ -974,10 +974,10 @@ void ModifyOrder()
             string payChoice;
             while (true)
             {
-                Console.Write("Proceed to payment? [Y/N/X]: ");
+                Console.Write("Proceed to payment? [Y/N]: ");
                 payChoice = Console.ReadLine().ToUpper();
 
-                if (payChoice == "X" || payChoice == "N")
+                if (payChoice == "N")
                 {
                     order.OrderTotal = oldTotal;
                     Console.WriteLine("Payment cancelled. Changes reverted.");
@@ -995,7 +995,7 @@ void ModifyOrder()
             string method;
             while (true)
             {
-                Console.Write("Payment method [CC/PP/CD/X]: ");
+                Console.Write("Payment method [CC/PP/CD], X to Cancel: ");
                 method = Console.ReadLine().ToUpper();
 
                 if (method == "X")
@@ -1039,7 +1039,7 @@ void ModifyOrder()
 
             Archive.Push(refundobj);
             Console.WriteLine($"New Quantity of {order.OrderedFoodItem[itemNo - 1].ItemName}: {order.OrderedFoodItem[itemNo - 1].QtyOrdered}");
-            
+            Console.WriteLine($"Amount Refunded: ${refundobj.OrderTotal:F2}");
         }
 
 
@@ -1325,18 +1325,21 @@ void DisplayTotalOrderAmount()
 
         foreach (Order ord in rest.Order)
         {
-            gruberoEarnings += (ord.OrderTotal * 0.3);
+            if (ord.OrderStatus == "Delivered")
+            {
+                gruberoEarnings += (ord.OrderTotal * 0.3);
 
-            restaurantOrderTotal += ord.OrderTotal;
+                restaurantOrderTotal += (ord.OrderTotal - 5);
+            }
+
             
         }
-        foreach (Order archivedOrder in Archive)
+
+        foreach (Order ord in rest.RefundStack)
         {
-            if (archivedOrder.Restaurant.RestaurantId == rest.RestaurantId)
-            {
-                restaurantRefundTotal += archivedOrder.OrderTotal;
-            }
+            restaurantRefundTotal += ord.OrderTotal;
         }
+
 
         Console.WriteLine($"\nRestaurant: {rest.RestaurantName}");
         Console.WriteLine($"Total Order Amount: ${restaurantOrderTotal:F2}");
